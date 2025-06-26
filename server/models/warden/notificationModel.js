@@ -1,19 +1,46 @@
+// const mongoose = require('mongoose');
+
+// const notificationSchema = new mongoose.Schema({
+//     title: { 
+//         type: String, 
+//         required: true 
+//     },
+//     description: { 
+//         type: String, 
+//         required: true 
+//     },
+//     createdAt: { 
+//         type: Date, 
+//         default: Date.now 
+//     }
+// });
+
+// const Notification = mongoose.model('Notification', notificationSchema);
+// module.exports = Notification;
 const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema({
-    title: { 
-        type: String, 
-        required: true 
+  title:      
+    {   type: String, 
+        required: true
     },
-    description: { 
-        type: String, 
-        required: true 
+  description:  { 
+    type: String, 
+    required: true 
     },
-    createdAt: { 
-        type: Date, 
-        default: Date.now 
-    }
+  // who should see it?
+  receiverId: {                // null  ➜ broadcast to everyone
+    type: String,
+    ref:  'Hosteller',
+    default: null
+  },
+  // link to a complaint when the message is about that complaint
+  complaintId: {
+    type: String,
+    ref:  'Complaint',
+    default: null
+  },
+  createdAt:  { type: Date, default: Date.now }
 });
 
-const Notification = mongoose.model('Notification', notificationSchema);
-module.exports = Notification;
+module.exports = mongoose.model('Notification', notificationSchema);

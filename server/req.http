@@ -1,0 +1,32 @@
+#To send the responses
+
+###To create the warden
+post http://localhost:4700/warden-api/warden
+Content-Type: application/json
+
+{
+    "role":"warden",
+    "firstName": "Abhishek2",
+    "email":"abhi1234@gmail.com",
+    "password":"abhi1234",
+     "phone":9234567234
+}
+
+###To verify the complaint by the warden
+put http://localhost:4700/warden-api/warden/verify
+Content-Type: application/json
+
+{
+  "complaintId": "665f1b1b1234567890abcdef",
+  "isLegit": true,
+  "remarks": "Water leakage confirmed in Room 102"
+}
+
+###To send the notifications to the hostellers
+put http://localhost:4700/warden-api/warden/notify
+Content-Type: application/json
+
+{
+  "title":"Your Complaint is verified",
+  "description":"Your room isn't cleaned since for 4 weeks, it will be completed within 2 working days."
+}
