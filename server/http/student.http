@@ -1,0 +1,132 @@
+### Register a new student/hosteller
+POST http://localhost:4700/student-api/register
+Content-Type: application/json
+
+{
+  "role": "student",
+  "Id": "23071A1253",
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john@gmail.com",
+  "password": "123456",
+  "roomNumber": 101,
+  "block": 1
+}
+
+### Login
+POST http://localhost:4700/student-api/login
+Content-Type: application/json
+
+{
+  "email": "john@gmail.com",
+  "password": "123456"
+}
+
+### Get complaints by studentId
+# # GET http://localhost:4700/student-api/complaints/23071A1253
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODVkOGRjNzUxMjg2YmUyMmI2YjEzYjYiLCJlbWFpbCI6ImpvaG5AZ21haWwuY29tIiwicm9sZSI6InN0dWRlbnQiLCJpYXQiOjE3NTA5NjE2OTMsImV4cCI6MTc1MTA0ODA5M30.ChYYqUrQ4HLU8kG9dHVKR1Rq64N454kB1ljSPemcGNA
+
+### Post a new complaint
+# POST http://localhost:4700/student-api/23071A1253/postcomplaint
+# Content-Type: application/json
+# Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODVlYjlmMmNlOWYyMmY2YTNjMTgwNzkiLCJlbWFpbCI6ImpvaG5AZ21haWwuY29tIiwicm9sZSI6InN0dWRlbnQiLCJpYXQiOjE3NTEwMzg0NTQsImV4cCI6MTc1MTEyNDg1NH0.UOciMKhTRk3bYwyetXASrSD0guqDbhI22aHH01HjjaU
+
+# {
+#   "title": "Leaking",
+#   "description": "Tap in bathroom leaking continuously",
+#   "category": "Plumbing",
+#   "roomno": "101",
+#   "block": "1",
+#   "createdAt":"{{$timestamp}}",
+#   "createdBy": "23071A1253"
+# }
+
+###posting with new stuff
+### POST Complaint
+POST http://localhost:4700/student-api/23071A1253/postcomplaint
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODYyYTc5ZGQ0MDcwYmJjZTRkMTg2ZmEiLCJlbWFpbCI6ImpvaG5AZ21haWwuY29tIiwicm9sZSI6InN0dWRlbnQiLCJpYXQiOjE3NTEzNTE0MjksImV4cCI6MTc1MTQzNzgyOX0.iSb1xKdfeDkKC9P7H1aALCC6PfGKJZfH2sqb1YKmAIA
+
+{
+  "title": "Leaking Tap",
+  "description": "Tap is leaking in bathroom continuously",
+  "category": "Electrical",
+  "roomno":"101",
+  "block":"1",
+  "createdBy":"23071A1253"
+}
+
+###update the complaint
+### PUT Status Update
+PUT http://localhost:4700/student-api/23071A1253/complaints/6862a9fd4627e1d3f85d2a16/status
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODYyYTc5ZGQ0MDcwYmJjZTRkMTg2ZmEiLCJlbWFpbCI6ImpvaG5AZ21haWwuY29tIiwicm9sZSI6InN0dWRlbnQiLCJpYXQiOjE3NTEyOTU5MDUsImV4cCI6MTc1MTM4MjMwNX0.B6oFWiARewnnlxpKQnHpDHAYPFktj0IxXK69LElUUl0
+
+{
+  "status": "Completed"
+}
+
+
+
+
+
+###to update the status of the commplaint  /status/:complaintId
+Put http://localhost:4700/student-api/status/6862a9fd4627e1d3f85d2a16
+Content-Type: application/json
+Authorization: BearereyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODYyYTc5ZGQ0MDcwYmJjZTRkMTg2ZmEiLCJlbWFpbCI6ImpvaG5AZ21haWwuY29tIiwicm9sZSI6InN0dWRlbnQiLCJpYXQiOjE3NTEyOTU5MDUsImV4cCI6MTc1MTM4MjMwNX0.B6oFWiARewnnlxpKQnHpDHAYPFktj0IxXK69LElUUl0
+
+{
+   "status":"Resolved"
+}
+### Get complaints by studentId
+GET http://localhost:4700/student-api/complaints/23071A1253
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODVjZjEyZDBjYzBiODc3MTQ4Yjc1N2YiLCJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1MDkyMTUyOSwiZXhwIjoxNzUxMDA3OTI5fQ.Hq6CS8Qbf-kQrU1FCilXRumbT3Kg3RccDdgtw0QZ9Ys
+
+### Edit a complaint
+PUT http://localhost:4700/student-api/complaint/edit/6862a9fd4627e1d3f85d2a16
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODYyYTc5ZGQ0MDcwYmJjZTRkMTg2ZmEiLCJlbWFpbCI6ImpvaG5AZ21haWwuY29tIiwicm9sZSI6InN0dWRlbnQiLCJpYXQiOjE3NTEyOTU5MDUsImV4cCI6MTc1MTM4MjMwNX0.B6oFWiARewnnlxpKQnHpDHAYPFktj0IxXK69LElUUl0
+
+{
+  "title": "Updated Complaint Title",
+  "description": "Updated description of the complaint",
+  "category": "Electrical",
+  "roomno": "101",
+  "block": "1",
+  "createdAt":"{{$timestamp}}",
+  "createdBy": "23071A1253"
+}
+
+### Delete a complaint
+DELETE http://localhost:4700/student-api/complaint/delete/685cd39e1127b5d7e69c68d0
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODVjZjEyZDBjYzBiODc3MTQ4Yjc1N2YiLCJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1MDkyMTUyOSwiZXhwIjoxNzUxMDA3OTI5fQ.Hq6CS8Qbf-kQrU1FCilXRumbT3Kg3RccDdgtw0QZ9Ys
+
+
+###edit student profile by Id
+PUT http://localhost:4700/student-api/editprofile/23071A1253
+# Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODVjZjEyZDBjYzBiODc3MTQ4Yjc1N2YiLCJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1MDkyMTUyOSwiZXhwIjoxNzUxMDA3OTI5fQ.Hq6CS8Qbf-kQrU1FCilXRumbT3Kg3RccDdgtw0QZ9Ys
+
+{
+  "role": "student",
+  "Id": "23071A1253",
+  "firstName": "JohnModified",
+  "lastName": "Doe",
+  "email":"john1@example.com",
+  "password": "627372",
+  "roomNumber": 102,
+  "block": 1
+}
+
+
+### Delete a student profile
+DELETE http://localhost:4700/student-api/deleteprofile/23071A1253
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODVjZjEyZDBjYzBiODc3MTQ4Yjc1N2YiLCJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1MDkyMTUyOSwiZXhwIjoxNzUxMDA3OTI5fQ.Hq6CS8Qbf-kQrU1FCilXRumbT3Kg3RccDdgtw0QZ9Ys
+
+###get complaint status by studentId and complaintId
+GET http://localhost:4700/student-api/complaint/status/23071A1253/685cf3efddd359a64c538744
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODVjZjEyZDBjYzBiODc3MTQ4Yjc1N2YiLCJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1MDkyMTUyOSwiZXhwIjoxNzUxMDA3OTI5fQ.Hq6CS8Qbf-kQrU1FCilXRumbT3Kg3RccDdgtw0QZ9Ys
+
+###read all complaints
+GET http://localhost:4700/student-api/complaint/readall
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODVjZjEyZDBjYzBiODc3MTQ4Yjc1N2YiLCJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1MDkyMTUyOSwiZXhwIjoxNzUxMDA3OTI5fQ.Hq6CS8Qbf-kQrU1FCilXRumbT3Kg3RccDdgtw0QZ9Ys

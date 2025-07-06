@@ -5,6 +5,10 @@ const hostellerSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    Id:{
+        type:String,
+        required:true
+    },
     firstName: { 
         type: String, 
         required: true 
@@ -20,11 +24,11 @@ const hostellerSchema = new mongoose.Schema({
         required: true 
     },
     roomNumber:{
-        type: number, 
+        type: Number, 
         required: true 
     },
     block:{
-        type: number, 
+        type: Number, 
     }, 
     profileImageUrl: String,
 });

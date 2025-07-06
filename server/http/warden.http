@@ -1,0 +1,53 @@
+#To send the responses
+###To create the warden
+post http://localhost:4700/warden-api/register
+Content-Type: application/json
+
+{
+    "role":"warden",
+    "firstName": "Abhishek2",
+    "email":"abhi1234@gmail.com",
+    "password":"abhi1234",
+     "phone":9234567234
+}
+
+###To sign in as warden
+post http://localhost:4700/warden-api/login
+Content-Type: application/json
+
+{
+    "email":"abhi1234@gmail.com",
+    "password":"abhi1234"
+}
+
+###To verify the complaint by the warden
+put http://localhost:4700/warden-api/warden/verify
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODVlZmIyMDkyYWFiMmY1MzE5OTQ0N2UiLCJlbWFpbCI6ImFiaGkxMjM0QGdtYWlsLmNvbSIsInJvbGUiOiJ3YXJkZW4iLCJpYXQiOjE3NTEyOTY2MDMsImV4cCI6MTc1MTM4MzAwM30.n9lDP7Uyi_s8R2hZByFaSr1kyChrgX7gpkJ58H8rkuQ
+
+
+{
+  "complaintId": "6862a9fd4627e1d3f85d2a16",
+  "isLegit": true,
+  "remarks": "Water leakage confirmed in Room 102"
+}
+
+###To send the notifications to the hostellers
+post http://localhost:4700/warden-api/warden/notify
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODVlZmIyMDkyYWFiMmY1MzE5OTQ0N2UiLCJlbWFpbCI6ImFiaGkxMjM0QGdtYWlsLmNvbSIsInJvbGUiOiJ3YXJkZW4iLCJpYXQiOjE3NTEyOTY2MDMsImV4cCI6MTc1MTM4MzAwM30.n9lDP7Uyi_s8R2hZByFaSr1kyChrgX7gpkJ58H8rkuQ
+
+{
+  "complaintId": "6862a9fd4627e1d3f85d2a16",
+  "title":"Your Complaint is verified",
+  "description":"Your room isn't cleaned since for 4 weeks, it will be completed within 2 working days."
+}
+
+
+###get the complaints based on status
+get http://localhost:4700/warden-api/statuses/Completed
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODVlZmIyMDkyYWFiMmY1MzE5OTQ0N2UiLCJlbWFpbCI6ImFiaGkxMjM0QGdtYWlsLmNvbSIsInJvbGUiOiJ3YXJkZW4iLCJpYXQiOjE3NTEyOTY2MDMsImV4cCI6MTc1MTM4MzAwM30.n9lDP7Uyi_s8R2hZByFaSr1kyChrgX7gpkJ58H8rkuQ
+
+###get all compliants
+get http://localhost:4700/warden-api/complaints/all
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODVlZmIyMDkyYWFiMmY1MzE5OTQ0N2UiLCJlbWFpbCI6ImFiaGkxMjM0QGdtYWlsLmNvbSIsInJvbGUiOiJ3YXJkZW4iLCJpYXQiOjE3NTEyOTY2MDMsImV4cCI6MTc1MTM4MzAwM30.n9lDP7Uyi_s8R2hZByFaSr1kyChrgX7gpkJ58H8rkuQ

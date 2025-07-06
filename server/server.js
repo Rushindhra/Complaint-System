@@ -2,7 +2,7 @@ const exp=require('express')
 const app=exp()
 require('dotenv').config()
 const mongoose=require('mongoose');
-const hostelerApp = require('./API/hostelerApi');
+const studentApp = require('./API/studentApi');
 const wardenApp = require('./API/wardenApi');
 const port=process.env.PORT||4000;
 mongoose.connect(process.env.DBURL)
@@ -11,5 +11,5 @@ mongoose.connect(process.env.DBURL)
 
 // app.use(cookieParser());
 //Routes
-app.use("/hosteler-api",hostelerApp)
+app.use("/student-api",studentApp)
 app.use("/warden-api",wardenApp)

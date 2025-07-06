@@ -1,24 +1,21 @@
+const mongoose = require("mongoose");
+
 const complaintStatusSchema = new mongoose.Schema({
-    complaintId: {
-        type: String,
-        ref: 'Complaint',
-        required: true
-    },
-    updatedBy: {
-        type: String,
-        ref: 'Hosteller', // Hosteller
-        required: true
-    },
-    status: {
-        type: String,
-        enum: ['Not Done Yet', 'In Progress', 'Completed'],
-        default: 'Not Done Yet'
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
-    }
+  complaintId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Complaint',
+    required: true
+  },
+  updatedBy:   {
+    type: String,               // roll-number or "warden"
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['Not Started','In Progress','Completed','verified','rejected'],
+    default: 'Not Started'
+  },
+  updatedAt:   { type: Date, default: Date.now }
 });
 
-const ComplaintStatus = mongoose.model('ComplaintStatus', complaintStatusSchema);
-module.exports = ComplaintStatus;
+module.exports = mongoose.model("ComplaintStatus", complaintStatusSchema);
