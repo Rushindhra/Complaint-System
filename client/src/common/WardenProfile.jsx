@@ -1,13 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { useUser } from '../../context/UserContext.jsx';
+import { useUser } from '../context/UserContext.jsx';
 
-// Chart.js imports for dynamic charts
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
+// FIXED Chart.js imports - register ALL required components
+import { 
+  Chart as ChartJS, 
+  ArcElement, 
+  Tooltip, 
+  Legend, 
+  CategoryScale, 
+  LinearScale, 
+  BarElement,
+  DoughnutController,
+  PieController
+} from 'chart.js';
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
+// CRITICAL FIX: Register ALL Chart.js components
+ChartJS.register(
+  ArcElement, 
+  Tooltip, 
+  Legend, 
+  CategoryScale, 
+  LinearScale, 
+  BarElement,
+  DoughnutController,
+  PieController
+);
 
-function Warden() {
+function WardenProfile() {
   const { wardenId } = useParams();
   const navigate = useNavigate();
   const { currentUser, logout } = useUser();
@@ -50,20 +70,22 @@ function Warden() {
     rejected: 0
   });
 
-  // ========== BACKEND API ENDPOINTS - REPLACE WITH YOUR ACTUAL URLs ==========
+  // FIXED API ENDPOINTS
   const API_ENDPOINTS = {
-    // Replace these URLs with your actual backend endpoints
-    WARDEN_PROFILE: `http://localhost:4700/warden-api/profile/${wardenId}`, // GET warden profile
-    UPDATE_PROFILE: `http://localhost:4700/warden-api/editprofile/${wardenId}`, // PUT update profile
-    DELETE_PROFILE: `http://localhost:4700/warden-api/deleteprofwardenudentId/${wardenId}`, // DELETE profile
-    ALL_COMPLAINTS: 'http://localhost:4700/warden-api/complaints/all', // GET all complaints for warden
-    RECENT_ACTIVITY: 'http://localhost:4700/warden-api/complaints/recent', // GET recent activities
-    COMPLAINT_STATS: 'http://localhost:4700/warden-api/statuses', // GET complaint statistics
+    WARDEN_PROFILE: `http://localhost:4700/warden-api/profile/${wardenId}`,
+    UPDATE_PROFILE: `http://localhost:4700/warden-api/profile/update/${wardenId}`,
+    DELETE_PROFILE: `http://localhost:4700/warden-api/profile/delete/${wardenId}`,
+    ALL_COMPLAINTS: 'http://localhost:4700/warden-api/complaints/all',
+    RECENT_ACTIVITY: 'http://localhost:4700/warden-api/complaints/recent',
+    COMPLAINT_STATS: 'http://localhost:4700/warden-api/complaints/stats',
   };
 
   useEffect(() => {
     // Check if user is authenticated and is a warden
     if (!currentUser || currentUser.role !== 'warden' || currentUser.Id !== wardenId) {
+      console.log('Access denied - redirecting to signup');
+      console.log('Current user:', currentUser);
+      console.log('Expected warden ID:', wardenId);
       navigate('/signup');
       return;
     }
@@ -102,7 +124,7 @@ function Warden() {
     }
   };
 
-  // Fetch warden profile data
+  // FIXED: Fetch warden profile data
   const fetchWardenProfile = async () => {
     try {
       const token = localStorage.getItem('authToken');
@@ -116,17 +138,18 @@ function Warden() {
 
       const result = await response.json();
 
-      if (response.ok) {
+      if (response.ok && result.payload) {
         setWardenData(result.payload);
+        console.log('Warden profile fetched successfully:', result.payload);
       } else {
-        console.warn('Using fallback warden data');
-        // Fallback data
+        console.warn('Using fallback warden data from currentUser');
+        // Fallback to currentUser data
         setWardenData({
           firstName: currentUser.firstName || 'Warden',
           lastName: currentUser.lastName || 'Admin',
           email: currentUser.email || 'warden@university.edu',
           employeeId: currentUser.employeeId || 'WRD001',
-          phone: currentUser.phone || '+91 9876543210',
+          phone: currentUser.phone || '',
           department: currentUser.department || 'Student Affairs',
           experience: currentUser.experience || '5 years',
           hostelBlock: currentUser.hostelBlock || 'Block A',
@@ -141,7 +164,7 @@ function Warden() {
         lastName: currentUser.lastName || 'Admin',
         email: currentUser.email || 'warden@university.edu',
         employeeId: currentUser.employeeId || 'WRD001',
-        phone: currentUser.phone || '+91 9876543210',
+        phone: currentUser.phone || '',
         department: currentUser.department || 'Student Affairs',
         experience: currentUser.experience || '5 years',
         hostelBlock: currentUser.hostelBlock || 'Block A',
@@ -150,10 +173,12 @@ function Warden() {
     }
   };
 
-  // Fetch all complaints for dashboard
+  // FIXED: Fetch all complaints for dashboard
   const fetchAllComplaints = async () => {
     try {
       const token = localStorage.getItem('authToken');
+      console.log('Fetching complaints with token:', token ? 'Present' : 'Missing');
+      
       const response = await fetch(API_ENDPOINTS.ALL_COMPLAINTS, {
         method: 'GET',
         headers: {
@@ -162,18 +187,36 @@ function Warden() {
         }
       });
 
+      console.log('Complaints response status:', response.status);
       const result = await response.json();
+      console.log('Complaints response:', result);
 
       if (response.ok) {
-        setAllComplaints(result.payload || []);
-        calculateStatistics(result.payload || []);
-        updateCharts(result.payload || []);
+        const complaintsData = result.payload || [];
+        setAllComplaints(complaintsData);
+        calculateStatistics(complaintsData);
+        
+        // Delay chart update to ensure DOM is ready
+        setTimeout(() => {
+          updateCharts(complaintsData);
+        }, 100);
+        
+        console.log('Complaints fetched successfully:', complaintsData.length);
       } else {
+        console.error('Failed to fetch complaints:', result.message);
         setError('Failed to fetch complaints data');
+        // Set empty data to prevent crashes
+        setAllComplaints([]);
+        calculateStatistics([]);
+        updateCharts([]);
       }
     } catch (error) {
       console.error('Error fetching complaints:', error);
       setError('Network error while fetching complaints');
+      // Set empty data to prevent crashes
+      setAllComplaints([]);
+      calculateStatistics([]);
+      updateCharts([]);
     }
   };
 
@@ -196,11 +239,24 @@ function Warden() {
       }
     } catch (error) {
       console.error('Error fetching recent activity:', error);
+      setRecentActivity([]);
     }
   };
 
   // Calculate statistics from complaints data
   const calculateStatistics = (complaints) => {
+    if (!complaints || !Array.isArray(complaints)) {
+      setStats({
+        total: 0,
+        pending: 0,
+        inProgress: 0,
+        completed: 0,
+        verified: 0,
+        rejected: 0
+      });
+      return;
+    }
+
     const total = complaints.length;
     const pending = complaints.filter(c => c.status?.toLowerCase() === 'pending' || !c.status).length;
     const inProgress = complaints.filter(c => c.status?.toLowerCase() === 'in progress').length;
@@ -208,23 +264,35 @@ function Warden() {
     const verified = complaints.filter(c => c.status?.toLowerCase() === 'verified').length;
     const rejected = complaints.filter(c => c.status?.toLowerCase() === 'rejected').length;
 
-    setStats({
+    const newStats = {
       total,
       pending,
       inProgress,
       completed,
       verified,
       rejected
-    });
+    };
+
+    console.log('Calculated stats:', newStats);
+    setStats(newStats);
   };
 
-  // Update charts with complaint data
+  // FIXED: Update charts with complaint data
   const updateCharts = (complaints) => {
+    if (!complaints || !Array.isArray(complaints)) {
+      console.log('No complaints data for charts');
+      return;
+    }
+
+    console.log('Updating charts with', complaints.length, 'complaints');
+
     // Category chart data
     const categories = ['Plumbing', 'Electricity', 'Cleaning', 'Furniture', 'WiFi', 'Food', 'Security', 'Other'];
     const categoryCounts = categories.map(category => 
       complaints.filter(complaint => complaint.category?.toLowerCase() === category.toLowerCase()).length
     );
+
+    console.log('Category counts:', categoryCounts);
 
     const categoryData = {
       labels: categories,
@@ -242,8 +310,13 @@ function Warden() {
     // Status chart data
     const statuses = ['Pending', 'In Progress', 'Completed', 'Verified', 'Rejected'];
     const statusCounts = statuses.map(status => 
-      complaints.filter(complaint => complaint.status?.toLowerCase() === status.toLowerCase()).length
+      complaints.filter(complaint => 
+        complaint.status?.toLowerCase() === status.toLowerCase() || 
+        (!complaint.status && status === 'Pending')
+      ).length
     );
+
+    console.log('Status counts:', statusCounts);
 
     const statusData = {
       labels: statuses,
@@ -285,28 +358,40 @@ function Warden() {
       }
     };
 
-    // Update category chart
-    if (categoryChartRef.current) {
-      const ctx = categoryChartRef.current.getContext('2d');
-      if (categoryChart) categoryChart.destroy();
-      const newCategoryChart = new ChartJS(ctx, {
-        type: 'doughnut',
-        data: categoryData,
-        options: chartOptions
-      });
-      setCategoryChart(newCategoryChart);
-    }
+    try {
+      // FIXED: Update category chart with better error handling
+      if (categoryChartRef.current) {
+        const ctx = categoryChartRef.current.getContext('2d');
+        if (categoryChart) {
+          categoryChart.destroy();
+        }
+        
+        const newCategoryChart = new ChartJS(ctx, {
+          type: 'doughnut',
+          data: categoryData,
+          options: chartOptions
+        });
+        setCategoryChart(newCategoryChart);
+        console.log('Category chart created successfully');
+      }
 
-    // Update status chart
-    if (statusChartRef.current) {
-      const ctx = statusChartRef.current.getContext('2d');
-      if (statusChart) statusChart.destroy();
-      const newStatusChart = new ChartJS(ctx, {
-        type: 'doughnut',
-        data: statusData,
-        options: chartOptions
-      });
-      setStatusChart(newStatusChart);
+      // FIXED: Update status chart with better error handling
+      if (statusChartRef.current) {
+        const ctx = statusChartRef.current.getContext('2d');
+        if (statusChart) {
+          statusChart.destroy();
+        }
+        
+        const newStatusChart = new ChartJS(ctx, {
+          type: 'doughnut',
+          data: statusData,
+          options: chartOptions
+        });
+        setStatusChart(newStatusChart);
+        console.log('Status chart created successfully');
+      }
+    } catch (error) {
+      console.error('Error creating charts:', error);
     }
   };
 
@@ -1038,28 +1123,8 @@ function Warden() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <div className="row mt-5">
-        <div className="col-12">
-          <div className="bg-light p-3 text-center">
-            <p className="text-muted mb-0">
-              <i className="fas fa-university me-2"></i>
-              University Complaint Management System - Warden Portal
-              <span className="ms-3">
-                <i className="fas fa-phone me-1"></i>
-                Support: +91 9876543210
-              </span>
-              <span className="ms-3">
-                <i className="fas fa-envelope me-1"></i>
-                help@university.edu
-              </span>
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
 
-export default Warden;
+export default WardenProfile;

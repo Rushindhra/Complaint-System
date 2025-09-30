@@ -12,7 +12,7 @@ const complaintStatusSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Not Started','In Progress','Completed','verified','rejected'],
+    enum: ['Not Started','In Progress','Completed','Verified','Rejected'],
     default: 'Not Started'
   },
   updatedAt:   { type: Date, default: Date.now }
