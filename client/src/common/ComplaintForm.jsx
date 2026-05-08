@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import PageNav from '../components/PageNav';
+import { API_BASE_URL } from '../config/api';
 
 function ComplaintForm() {
   const { register, handleSubmit, formState: { errors }, reset, watch } = useForm();
@@ -33,7 +34,7 @@ function ComplaintForm() {
       };
 
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:4700/student-api/${currentUser.Id}/postcomplaint`, {
+      const response = await fetch(`${API_BASE_URL}/student-api/${currentUser.Id}/postcomplaint`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

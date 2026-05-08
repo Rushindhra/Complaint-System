@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import { API_BASE_URL } from '../config/api';
 
 function StudentProfile() {
   const { studentId } = useParams();
@@ -60,7 +61,7 @@ function StudentProfile() {
     
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:4700/student-api/complaints/${currentUser.Id}`, {
+      const response = await fetch(`${API_BASE_URL}/student-api/complaints/${currentUser.Id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -100,7 +101,7 @@ function StudentProfile() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:4700/student-api/editprofile/${currentUser.Id}`, {
+      const response = await fetch(`${API_BASE_URL}/student-api/editprofile/${currentUser.Id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -135,7 +136,7 @@ function StudentProfile() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:4700/student-api/deleteprofile/${currentUser.Id}`, {
+      const response = await fetch(`${API_BASE_URL}/student-api/deleteprofile/${currentUser.Id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -174,7 +175,7 @@ function StudentProfile() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:4700/student-api/complaint/edit/${editingComplaintId}`, {
+      const response = await fetch(`${API_BASE_URL}/student-api/complaint/edit/${editingComplaintId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -205,7 +206,7 @@ function StudentProfile() {
     setActionLoading(complaintId);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:4700/student-api/${currentUser.Id}/complaints/${complaintId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/student-api/${currentUser.Id}/complaints/${complaintId}/status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -239,7 +240,7 @@ function StudentProfile() {
     setActionLoading(complaintId);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:4700/student-api/complaint/delete/${complaintId}`, {
+      const response = await fetch(`${API_BASE_URL}/student-api/complaint/delete/${complaintId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

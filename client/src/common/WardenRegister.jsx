@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import PageNav from '../components/PageNav';
+import { API_BASE_URL } from '../config/api';
 
 function WardenRegister() {
   const { register, handleSubmit, formState: { errors }, watch } = useForm();
@@ -18,7 +19,7 @@ function WardenRegister() {
     try {
       const { confirmPassword, ...registrationData } = data;
 
-      const response = await fetch('http://localhost:4700/warden-api/register', {
+      const response = await fetch(`${API_BASE_URL}/warden-api/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

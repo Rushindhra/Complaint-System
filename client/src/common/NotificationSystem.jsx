@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api';
 
 function NotificationSystem() {
   const { currentUser, isWarden, isStudent, notifications, markNotificationAsRead, deleteNotification, loadNotifications } = useUser();
@@ -63,7 +64,7 @@ function NotificationSystem() {
   const loadStudentList = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:4700/warden-api/students/list', {
+      const response = await fetch(`${API_BASE_URL}/warden-api/students/list`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -88,7 +89,7 @@ function NotificationSystem() {
       const token = localStorage.getItem('authToken');
       
       // Use the warden notify endpoint
-      const response = await fetch('http://localhost:4700/warden-api/notify', {
+      const response = await fetch(`${API_BASE_URL}/warden-api/notify`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

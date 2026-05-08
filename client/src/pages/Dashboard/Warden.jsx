@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useUser } from '../../context/UserContext.jsx';
+import { API_BASE_URL } from '../../config/api';
 
 // Chart.js imports for dynamic charts
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
@@ -53,12 +54,12 @@ function Warden() {
   // ========== BACKEND API ENDPOINTS - REPLACE WITH YOUR ACTUAL URLs ==========
   const API_ENDPOINTS = {
     // Replace these URLs with your actual backend endpoints
-    WARDEN_PROFILE: `http://localhost:4700/warden-api/profile/${wardenId}`, // GET warden profile
-    UPDATE_PROFILE: `http://localhost:4700/warden-api/editprofile/${wardenId}`, // PUT update profile
-    DELETE_PROFILE: `http://localhost:4700/warden-api/deleteprofwardenudentId/${wardenId}`, // DELETE profile
-    ALL_COMPLAINTS: 'http://localhost:4700/warden-api/complaints/all', // GET all complaints for warden
-    RECENT_ACTIVITY: 'http://localhost:4700/warden-api/complaints/recent', // GET recent activities
-    COMPLAINT_STATS: 'http://localhost:4700/warden-api/statuses', // GET complaint statistics
+    WARDEN_PROFILE: `${API_BASE_URL}/warden-api/profile/${wardenId}`, // GET warden profile
+    UPDATE_PROFILE: `${API_BASE_URL}/warden-api/editprofile/${wardenId}`, // PUT update profile
+    DELETE_PROFILE: `${API_BASE_URL}/warden-api/deleteprofwardenudentId/${wardenId}`, // DELETE profile
+    ALL_COMPLAINTS: `${API_BASE_URL}/warden-api/complaints/all`, // GET all complaints for warden
+    RECENT_ACTIVITY: `${API_BASE_URL}/warden-api/complaints/recent`, // GET recent activities
+    COMPLAINT_STATS: `${API_BASE_URL}/warden-api/statuses`, // GET complaint statistics
   };
 
   useEffect(() => {

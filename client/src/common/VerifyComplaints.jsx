@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import { API_BASE_URL } from '../config/api';
 
 function VerifyComplaints() {
   const { wardenId } = useParams();
@@ -57,7 +58,7 @@ function VerifyComplaints() {
       const token = localStorage.getItem('authToken');
       console.log('Fetching complaints...');
       
-      const response = await fetch('http://localhost:4700/warden-api/complaints/all', {
+      const response = await fetch(`${API_BASE_URL}/warden-api/complaints/all`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -93,7 +94,7 @@ function VerifyComplaints() {
       const token = localStorage.getItem('authToken');
       
       // FIXED: Correct API endpoint URL
-      const response = await fetch(`http://localhost:4700/warden-api/warden/verify/${complaintId}`, {
+      const response = await fetch(`${API_BASE_URL}/warden-api/warden/verify/${complaintId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -137,7 +138,7 @@ function VerifyComplaints() {
       const notificationTitle = `Complaint ${newStatus}: ${complaint.title}`;
       const notificationMessage = `Your complaint "${complaint.title}" has been ${newStatus.toLowerCase()} by ${currentUser.firstName} ${currentUser.lastName}. ${updateData.wardenComments ? `Warden comments: ${updateData.wardenComments}` : ''}`;
 
-      const response = await fetch('http://localhost:4700/warden-api/notify', {
+      const response = await fetch(`${API_BASE_URL}/warden-api/notify`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -184,7 +185,7 @@ function VerifyComplaints() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:4700/warden-api/notify', {
+      const response = await fetch(`${API_BASE_URL}/warden-api/notify`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -258,7 +259,7 @@ function VerifyComplaints() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:4700/warden-api/complaints/${selectedComplaint._id}/update`, {
+      const response = await fetch(`${API_BASE_URL}/warden-api/complaints/${selectedComplaint._id}/update`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

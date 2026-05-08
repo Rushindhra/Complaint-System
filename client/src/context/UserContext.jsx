@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { API_BASE_URL } from '../config/api';
 
 const UserContext = createContext();
 
@@ -79,9 +80,9 @@ export const UserProvider = ({ children }) => {
       // Choose API endpoint based on user role
       let apiEndpoint;
       if (userRole === 'warden') {
-        apiEndpoint = `http://localhost:4700/warden-api/notifications/${userId}`;
+        apiEndpoint = `${API_BASE_URL}/warden-api/notifications/${userId}`;
       } else {
-        apiEndpoint = `http://localhost:4700/student-api/notifications/${userId}`;
+        apiEndpoint = `${API_BASE_URL}/student-api/notifications/${userId}`;
       }
       
       console.log('Loading notifications from:', apiEndpoint);
@@ -218,9 +219,9 @@ export const UserProvider = ({ children }) => {
       
       let apiEndpoint;
       if (currentUser?.role === 'warden') {
-        apiEndpoint = `http://localhost:4700/warden-api/notifications/${notificationId}/mark-read`;
+        apiEndpoint = `${API_BASE_URL}/warden-api/notifications/${notificationId}/mark-read`;
       } else {
-        apiEndpoint = `http://localhost:4700/student-api/notifications/${notificationId}/mark-read`;
+        apiEndpoint = `${API_BASE_URL}/student-api/notifications/${notificationId}/mark-read`;
       }
 
       const response = await fetch(apiEndpoint, {
@@ -260,9 +261,9 @@ export const UserProvider = ({ children }) => {
       
       let apiEndpoint;
       if (currentUser?.role === 'warden') {
-        apiEndpoint = `http://localhost:4700/warden-api/notifications/${notificationId}`;
+        apiEndpoint = `${API_BASE_URL}/warden-api/notifications/${notificationId}`;
       } else {
-        apiEndpoint = `http://localhost:4700/student-api/notifications/${notificationId}`;
+        apiEndpoint = `${API_BASE_URL}/student-api/notifications/${notificationId}`;
       }
 
       const response = await fetch(apiEndpoint, {

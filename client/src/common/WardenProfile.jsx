@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useUser } from '../context/UserContext.jsx';
+import { API_BASE_URL } from '../config/api';
 
 // FIXED Chart.js imports - register ALL required components
 import { 
@@ -72,12 +73,12 @@ function WardenProfile() {
 
   // FIXED API ENDPOINTS
   const API_ENDPOINTS = {
-    WARDEN_PROFILE: `http://localhost:4700/warden-api/profile/${wardenId}`,
-    UPDATE_PROFILE: `http://localhost:4700/warden-api/profile/update/${wardenId}`,
-    DELETE_PROFILE: `http://localhost:4700/warden-api/profile/delete/${wardenId}`,
-    ALL_COMPLAINTS: 'http://localhost:4700/warden-api/complaints/all',
-    RECENT_ACTIVITY: 'http://localhost:4700/warden-api/complaints/recent',
-    COMPLAINT_STATS: 'http://localhost:4700/warden-api/complaints/stats',
+    WARDEN_PROFILE: `${API_BASE_URL}/warden-api/profile/${wardenId}`,
+    UPDATE_PROFILE: `${API_BASE_URL}/warden-api/profile/update/${wardenId}`,
+    DELETE_PROFILE: `${API_BASE_URL}/warden-api/profile/delete/${wardenId}`,
+    ALL_COMPLAINTS: `${API_BASE_URL}/warden-api/complaints/all`,
+    RECENT_ACTIVITY: `${API_BASE_URL}/warden-api/complaints/recent`,
+    COMPLAINT_STATS: `${API_BASE_URL}/warden-api/complaints/stats`,
   };
 
   useEffect(() => {

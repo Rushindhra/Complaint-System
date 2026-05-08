@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
 import PageNav from '../components/PageNav';
+import { API_BASE_URL } from '../config/api';
 
 function Register() {
   const { register, handleSubmit, formState: { errors }, watch } = useForm();
@@ -21,7 +22,6 @@ function Register() {
     setMessage('');
 
     try {
-      const baseUrl = 'http://localhost:4700';
       const registrationData = {
         role: 'Hosteler',
         Id: data.RollNumber,
@@ -33,7 +33,7 @@ function Register() {
         block: parseInt(data.block, 10)
       };
 
-      const response = await fetch(`${baseUrl}/student-api/register`, {
+      const response = await fetch(`${API_BASE_URL}/student-api/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ function Register() {
       console.error('Registration error:', error);
 
       if (error.message === 'Failed to fetch') {
-        setMessage('Cannot connect to server. Please check if the backend server is running on http://localhost:4700');
+        setMessage(`Cannot connect to server. Please check if the backend server is running on ${API_BASE_URL}`);
       } else {
         setMessage('Network error. Please check your connection and try again.');
       }

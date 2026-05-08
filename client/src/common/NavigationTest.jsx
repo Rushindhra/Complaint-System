@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useUser } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import PageNav from '../components/PageNav';
+import { API_BASE_URL } from '../config/api';
 
 function NavigationTest() {
   const { currentUser, authToken, login, logout } = useUser();
@@ -155,9 +156,9 @@ function NavigationTest() {
   // Test API endpoints
   const testAPIEndpoints = async () => {
     const endpoints = [
-      { name: 'Student Login', url: 'http://localhost:4700/student-api/login' },
-      { name: 'Warden Login', url: 'http://localhost:4700/warden-api/login' },
-      { name: 'Notifications', url: 'http://localhost:4700/api/notifications/test' }
+      { name: 'Student Login', url: `${API_BASE_URL}/student-api/login` },
+      { name: 'Warden Login', url: `${API_BASE_URL}/warden-api/login` },
+      { name: 'Notifications', url: `${API_BASE_URL}/api/notifications/test` }
     ];
 
     for (const endpoint of endpoints) {

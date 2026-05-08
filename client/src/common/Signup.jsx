@@ -3,6 +3,7 @@ import { useNavigate, Link, Outlet, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { useUser } from '../context/UserContext';
 import PageNav from '../components/PageNav';
+import { API_BASE_URL } from '../config/api';
 
 function Signup() {
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -22,8 +23,8 @@ function Signup() {
 
     try {
       const apiEndpoint = loginType === 'student' 
-        ? 'http://localhost:4700/student-api/login'
-        : 'http://localhost:4700/warden-api/login';
+        ? `${API_BASE_URL}/student-api/login`
+        : `${API_BASE_URL}/warden-api/login`;
 
       const response = await fetch(apiEndpoint, {
         method: 'POST',
