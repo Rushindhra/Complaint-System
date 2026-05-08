@@ -1,6 +1,59 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const UserContext = createContext();
+
+/** Build a consistent user object from API / localStorage JSON. Returns null if unusable. */
+function normalizeStoredUser(parsedUser) {
+  if (!parsedUser || typeof parsedUser !== 'object') return null;
+
+  // Prefer API "Id" (warden login sets this to Mongo _id; avoid employeeId winning and breaking /warden-profile/... routes)
+  const displayId =
+    parsedUser.Id ||
+    parsedUser.id ||
+    parsedUser.studentId ||
+    parsedUser.employeeId;
+  const mongoId =
+    parsedUser._id != null && parsedUser._id !== ''
+      ? String(parsedUser._id)
+      : /^[a-fA-F0-9]{24}$/.test(String(displayId || ''))
+        ? String(displayId)
+        : null;
+
+  if (!mongoId && !displayId) return null;
+
+  return {
+    ...parsedUser,
+    _id: mongoId ?? parsedUser._id,
+    Id: displayId,
+    firstName: parsedUser.firstName || parsedUser.first_name || '',
+    lastName: parsedUser.lastName || parsedUser.last_name || '',
+    email: parsedUser.email || '',
+    role: parsedUser.role || 'student',
+    employeeId: parsedUser.employeeId || null,
+    department: parsedUser.department || null,
+    hostelBlock: parsedUser.hostelBlock || null,
+    experience: parsedUser.experience || null,
+    studentId: parsedUser.studentId || null,
+    block: parsedUser.block || null,
+    roomno: parsedUser.roomno || null,
+    phone: parsedUser.phone || null
+  };
+}
+
+function readSessionFromStorage() {
+  const token = localStorage.getItem('authToken');
+  const userInfo = localStorage.getItem('userInfo');
+  if (!token || !userInfo) return null;
+  try {
+    const parsedUser =
+      typeof userInfo === 'string' ? JSON.parse(userInfo) : userInfo;
+    const user = normalizeStoredUser(parsedUser);
+    if (!user) return null;
+    return { token, user };
+  } catch {
+    return null;
+  }
+}
 
 export const UserProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -8,91 +61,20 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
 
-  // Initialize user from localStorage on app start
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const userInfo = localStorage.getItem('userInfo');
-    
-    console.log('Initializing user context...');
-    console.log('Token from localStorage:', token ? 'Present' : 'Missing');
-    console.log('UserInfo from localStorage:', userInfo ? 'Present' : 'Missing');
-    
-    if (token && userInfo) {
-      try {
-        // First, check if userInfo is already an object
-        let parsedUser;
-        if (typeof userInfo === 'string') {
-          parsedUser = JSON.parse(userInfo);
-        } else {
-          parsedUser = userInfo;
-        }
-        
-        console.log('Parsed user data:', parsedUser);
-        
-        // Validate the parsed user object
-        if (!parsedUser || typeof parsedUser !== 'object') {
-          throw new Error('Invalid user object structure');
-        }
-        
-        // Extract user ID with multiple fallbacks
-        const userId = parsedUser.Id || parsedUser._id || parsedUser.id || 
-                      parsedUser.studentId || parsedUser.wardenId || parsedUser.employeeId;
-        
-        if (!userId) {
-          throw new Error('No valid user ID found in user data');
-        }
-        
-        // Normalize user object based on role
-        const normalizedUser = {
-          ...parsedUser,
-          Id: userId,
-          // Ensure essential fields exist
-          firstName: parsedUser.firstName || parsedUser.first_name || '',
-          lastName: parsedUser.lastName || parsedUser.last_name || '',
-          email: parsedUser.email || '',
-          role: parsedUser.role || 'student',
-          // Warden specific fields
-          employeeId: parsedUser.employeeId || null,
-          department: parsedUser.department || null,
-          hostelBlock: parsedUser.hostelBlock || null,
-          experience: parsedUser.experience || null,
-          // Student specific fields  
-          studentId: parsedUser.studentId || null,
-          block: parsedUser.block || null,
-          roomno: parsedUser.roomno || null,
-          phone: parsedUser.phone || null
-        };
-        
-        console.log('Normalized user:', normalizedUser);
-        
-        setCurrentUser(normalizedUser);
-        setAuthToken(token);
-        
-        // Load notifications for the user
-        loadNotifications(userId, normalizedUser.role);
-        
-        console.log('User context initialized successfully');
-      } catch (error) {
-        console.error('Error parsing user info from localStorage:', error);
-        console.error('Raw userInfo value:', userInfo);
-        
-        // Clear corrupted data
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userInfo');
-        
-        // Set error state or show message to user
-        console.warn('Cleared corrupted user data. User needs to login again.');
-      }
-    } else {
-      console.log('No stored auth data found');
+  // MOVED: Load notifications function defined before useEffect
+  const loadNotifications = useCallback(async (userId, userRole) => {
+    if (!userId || !userRole) {
+      console.warn('Cannot load notifications: missing userId or userRole');
+      return;
     }
-    setLoading(false);
-  }, []);
 
-  // UPDATED: Load notifications based on user role
-  const loadNotifications = async (userId, userRole) => {
     try {
       const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        console.warn('Cannot load notifications: no auth token');
+        return;
+      }
       
       // Choose API endpoint based on user role
       let apiEndpoint;
@@ -101,6 +83,8 @@ export const UserProvider = ({ children }) => {
       } else {
         apiEndpoint = `http://localhost:4700/student-api/notifications/${userId}`;
       }
+      
+      console.log('Loading notifications from:', apiEndpoint);
       
       const response = await fetch(apiEndpoint, {
         headers: {
@@ -114,18 +98,54 @@ export const UserProvider = ({ children }) => {
         setNotifications(result.payload || []);
         console.log(`Loaded ${result.payload?.length || 0} notifications for ${userRole}`);
       } else {
-        console.warn('Failed to load notifications:', response.status);
+        console.warn('Failed to load notifications:', response.status, response.statusText);
+        setNotifications([]);
       }
     } catch (error) {
       console.error('Error loading notifications:', error);
+      setNotifications([]);
     }
-  };
+  }, []);
+
+  // Initialize user from localStorage on app start
+  useEffect(() => {
+    const session = readSessionFromStorage();
+
+    if (session) {
+      setCurrentUser(session.user);
+      setAuthToken(session.token);
+      if (session.user._id) {
+        loadNotifications(String(session.user._id), session.user.role);
+      }
+    } else {
+      const hadStaleKeys =
+        localStorage.getItem('authToken') || localStorage.getItem('userInfo');
+      if (hadStaleKeys) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+      }
+    }
+
+    setLoading(false);
+  }, [loadNotifications]);
+
+  /** Re-read localStorage into React state (fixes stale UI after route changes or logout). */
+  const syncAuthFromStorage = useCallback(() => {
+    const session = readSessionFromStorage();
+    if (!session) {
+      setCurrentUser(null);
+      setAuthToken(null);
+      setNotifications([]);
+      return;
+    }
+    setCurrentUser(session.user);
+    setAuthToken(session.token);
+  }, []);
 
   // UPDATED: Login function with better role handling
-  const login = (user, token) => {
+  const login = useCallback((user, token) => {
     console.log('UserContext login called with:', { user, token });
     
-    // Validate inputs
     if (!user) {
       console.error('Login failed: User data is missing');
       return false;
@@ -135,65 +155,67 @@ export const UserProvider = ({ children }) => {
       console.error('Login failed: Token is missing');
       return false;
     }
-    
-    // Ensure user has an ID field
-    const userId = user.Id || user._id || user.id || user.studentId || user.wardenId;
-    if (!userId) {
-      console.error('Login failed: User ID is missing from user object:', user);
+
+    const normalizedUser = normalizeStoredUser(user);
+    if (!normalizedUser) {
+      console.error('Login failed: No user ID found in user object:', user);
       return false;
     }
-    
-    // Ensure user object has Id property and role for consistency
-    const normalizedUser = { 
-      ...user, 
-      Id: userId,
-      role: user.role || 'student' // Default to student if role not specified
-    };
-    
-    console.log('Setting user in context:', normalizedUser);
-    
+
     setCurrentUser(normalizedUser);
     setAuthToken(token);
     localStorage.setItem('authToken', token);
     localStorage.setItem('userInfo', JSON.stringify(normalizedUser));
-    
-    // Load notifications after login based on role
-    loadNotifications(userId, normalizedUser.role);
-    
+
+    if (normalizedUser._id) {
+      loadNotifications(String(normalizedUser._id), normalizedUser.role);
+    }
+
     console.log('Login completed successfully');
     return true;
-  };
+  }, [loadNotifications]);
 
   // Logout function
-  const logout = () => {
+  const logout = useCallback(() => {
     console.log('Logging out user');
     setCurrentUser(null);
     setAuthToken(null);
     setNotifications([]);
     localStorage.removeItem('authToken');
     localStorage.removeItem('userInfo');
-  };
+  }, []);
 
   // Update user info
-  const updateUser = (updatedUser) => {
+  const updateUser = useCallback((updatedUser) => {
     console.log('Updating user:', updatedUser);
-    const normalizedUser = { ...updatedUser, Id: updatedUser.Id || updatedUser._id };
+    const mongoId = updatedUser._id;
+    const displayId = updatedUser.studentId || updatedUser.employeeId || updatedUser.Id || updatedUser.id;
+    
+    const normalizedUser = { 
+      ...updatedUser, 
+      _id: mongoId,
+      Id: displayId
+    };
     setCurrentUser(normalizedUser);
     localStorage.setItem('userInfo', JSON.stringify(normalizedUser));
-  };
+  }, []);
 
   // Add notification
-  const addNotification = (notification) => {
+  const addNotification = useCallback((notification) => {
     console.log('Adding notification:', notification);
     setNotifications(prev => [notification, ...prev]);
-  };
+  }, []);
 
   // UPDATED: Mark notification as read based on user role
-  const markNotificationAsRead = async (notificationId) => {
+  const markNotificationAsRead = useCallback(async (notificationId) => {
     try {
       const token = localStorage.getItem('authToken');
       
-      // Choose API endpoint based on user role
+      if (!token) {
+        console.error('No auth token available');
+        return;
+      }
+      
       let apiEndpoint;
       if (currentUser?.role === 'warden') {
         apiEndpoint = `http://localhost:4700/warden-api/notifications/${notificationId}/mark-read`;
@@ -210,25 +232,32 @@ export const UserProvider = ({ children }) => {
       });
 
       if (response.ok) {
+        const idStr = String(notificationId);
         setNotifications(prev => 
           prev.map(notification => 
-            notification._id === notificationId 
+            String(notification._id) === idStr
               ? { ...notification, isRead: true }
               : notification
           )
         );
+      } else {
+        console.error('Failed to mark notification as read:', response.status);
       }
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
-  };
+  }, [currentUser]);
 
   // UPDATED: Delete notification based on user role
-  const deleteNotification = async (notificationId) => {
+  const deleteNotification = useCallback(async (notificationId) => {
     try {
       const token = localStorage.getItem('authToken');
       
-      // Choose API endpoint based on user role
+      if (!token) {
+        console.error('No auth token available');
+        return;
+      }
+      
       let apiEndpoint;
       if (currentUser?.role === 'warden') {
         apiEndpoint = `http://localhost:4700/warden-api/notifications/${notificationId}`;
@@ -245,84 +274,64 @@ export const UserProvider = ({ children }) => {
       });
 
       if (response.ok) {
+        const idStr = String(notificationId);
         setNotifications(prev => 
-          prev.filter(notification => notification._id !== notificationId)
+          prev.filter(notification => String(notification._id) !== idStr)
         );
+      } else {
+        console.error('Failed to delete notification:', response.status);
       }
     } catch (error) {
       console.error('Error deleting notification:', error);
     }
-  };
+  }, [currentUser]);
 
   // Get unread notifications count
-  const getUnreadCount = () => {
+  const getUnreadCount = useCallback(() => {
     return notifications.filter(notification => !notification.isRead).length;
-  };
+  }, [notifications]);
 
-  // UPDATED: Check if user is student - more flexible
-  const isStudent = () => {
-    return currentUser && (
-      currentUser.role === 'student' || 
-      currentUser.role === 'hosteller' || 
-      !currentUser.role || 
-      currentUser.role === ''
-    );
-  };
+  // UPDATED: Student / hosteler portal (anything that is not warden)
+  const isStudent = useCallback(() => {
+    return !!(currentUser && currentUser.role !== 'warden');
+  }, [currentUser]);
 
   // Check if user is warden
-  const isWarden = () => {
+  const isWarden = useCallback(() => {
     return currentUser && currentUser.role === 'warden';
-  };
+  }, [currentUser]);
 
-  // UPDATED: Get user dashboard URL with better logic
-  const getDashboardUrl = () => {
-    if (!currentUser || !currentUser.Id) {
-      console.log('No current user or ID, redirecting to signup');
+  // Dashboard URL: only wardens use the warden profile; everyone else (Hosteler, student, etc.) uses student profile
+  const getDashboardUrl = useCallback(() => {
+    if (!currentUser || currentUser.Id == null || currentUser.Id === '') {
       return '/signup';
     }
-    
-    console.log('Getting dashboard URL for user:', currentUser);
-    
-    if (isWarden()) {
-      const url = `/warden-profile/${currentUser.Id}`;
-      console.log('Warden dashboard URL:', url);
-      return url;
-    } else if (isStudent()) {
-      const url = `/student-profile/${currentUser.Id}`;
-      console.log('Student dashboard URL:', url);
-      return url;
+    if (currentUser.role === 'warden') {
+      return `/warden-profile/${currentUser.Id}`;
     }
-    
-    console.log('Unknown role, redirecting to signup');
-    return '/signup';
-  };
+    return `/student-profile/${currentUser.Id}`;
+  }, [currentUser]);
 
-  // UPDATED: Get user role display name
-  const getUserRoleDisplay = () => {
-    if (isWarden()) return 'Warden';
-    if (isStudent()) return 'Student';
+  const getUserRoleDisplay = useCallback(() => {
+    if (currentUser?.role === 'warden') return 'Warden';
+    if (currentUser) return 'Student';
     return 'Unknown';
-  };
+  }, [currentUser]);
 
   // UPDATED: Check if user can access warden features
-  const canAccessWardenFeatures = () => {
+  const canAccessWardenFeatures = useCallback(() => {
     return currentUser && currentUser.role === 'warden';
-  };
+  }, [currentUser]);
 
-  // UPDATED: Check if user can access student features
-  const canAccessStudentFeatures = () => {
-    return currentUser && (
-      currentUser.role === 'student' || 
-      currentUser.role === 'hosteller' || 
-      !currentUser.role
-    );
-  };
+  const canAccessStudentFeatures = useCallback(() => {
+    return !!(currentUser && currentUser.role !== 'warden');
+  }, [currentUser]);
 
   // Get user full name
-  const getUserFullName = () => {
+  const getUserFullName = useCallback(() => {
     if (!currentUser) return '';
     return `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim();
-  };
+  }, [currentUser]);
 
   const value = {
     currentUser,
@@ -339,6 +348,7 @@ export const UserProvider = ({ children }) => {
     isStudent,
     isWarden,
     getDashboardUrl,
+    syncAuthFromStorage,
     loadNotifications,
     getUserRoleDisplay,
     canAccessWardenFeatures,

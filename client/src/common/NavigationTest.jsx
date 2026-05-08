@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useUser } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
+import PageNav from '../components/PageNav';
 
 function NavigationTest() {
   const { currentUser, authToken, login, logout } = useUser();
@@ -251,7 +252,9 @@ function NavigationTest() {
   }, []);
 
   return (
-    <div className="container mt-4">
+    <>
+    <PageNav />
+    <div className="container mt-4 pb-5">
       <div className="row">
         <div className="col-12">
           <div className="card">
@@ -389,6 +392,7 @@ function NavigationTest() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

@@ -35,7 +35,7 @@ function VerifyComplaints() {
 
   useEffect(() => {
     // Check if user is authenticated and is a warden
-    if (!currentUser || !isWarden() || currentUser.Id !== wardenId) {
+    if (!currentUser || !isWarden() || String(currentUser.Id) !== String(wardenId)) {
       console.log('Access denied - user:', currentUser, 'wardenId:', wardenId);
       navigate('/signup');
       return;
@@ -130,7 +130,7 @@ function VerifyComplaints() {
 
   // FIXED: Complete sendAutoNotification function
   const sendAutoNotification = async (complaint, newStatus) => {
-    if (!complaint || !complaint.studentId) return;
+    if (!complaint || (!complaint.studentId && !complaint.studentRollNo && !complaint.createdBy)) return;
 
     try {
       const token = localStorage.getItem('authToken');
@@ -147,7 +147,7 @@ function VerifyComplaints() {
           senderId: currentUser.Id,
           senderName: `${currentUser.firstName} ${currentUser.lastName}`,
           senderRole: 'warden',
-          recipientId: complaint.studentId,
+          recipientId: complaint.studentId || complaint.studentRollNo || complaint.createdBy,
           recipientEmail: complaint.studentEmail,
           title: notificationTitle,
           message: notificationMessage,
@@ -194,7 +194,7 @@ function VerifyComplaints() {
           senderId: currentUser.Id,
           senderName: `${currentUser.firstName} ${currentUser.lastName}`,
           senderRole: 'warden',
-          recipientId: selectedComplaint.studentId,
+          recipientId: selectedComplaint.studentId || selectedComplaint.studentRollNo || selectedComplaint.createdBy,
           recipientEmail: selectedComplaint.studentEmail,
           title: notificationData.title,
           message: notificationData.message,
@@ -297,7 +297,7 @@ function VerifyComplaints() {
   const getFilteredComplaints = () => {
     switch (filter) {
       case 'pending':
-        return complaints.filter(c => !c.status || c.status.toLowerCase() === 'pending');
+        return complaints.filter(c => !c.status || c.status.toLowerCase() === 'pending' || c.status.toLowerCase() === 'not started');
       case 'in_progress':
         return complaints.filter(c => c.status?.toLowerCase() === 'in progress');
       case 'completed':
@@ -380,9 +380,46 @@ function VerifyComplaints() {
   }
 
   const filteredComplaints = getFilteredComplaints();
+  const statusCounts = {
+    total: complaints.length,
+    pending: complaints.filter(c => !c.status || c.status.toLowerCase() === 'pending' || c.status.toLowerCase() === 'not started').length,
+    inProgress: complaints.filter(c => c.status?.toLowerCase() === 'in progress').length,
+    completed: complaints.filter(c => c.status?.toLowerCase() === 'completed').length,
+    verified: complaints.filter(c => c.status?.toLowerCase() === 'verified').length,
+    rejected: complaints.filter(c => c.status?.toLowerCase() === 'rejected').length
+  };
 
   return (
     <div className="container-fluid">
+      <style>{`
+        .verify-shell {
+          background: #f6f8fb;
+          min-height: 100vh;
+        }
+        .verify-summary {
+          border: 1px solid #e6ebf2;
+          border-radius: 8px;
+          background: #fff;
+        }
+        .verify-stat {
+          border: 1px solid #e9eef5;
+          border-radius: 8px;
+          background: #fff;
+          min-height: 92px;
+        }
+        .verify-table th {
+          white-space: nowrap;
+          font-size: 0.82rem;
+          text-transform: uppercase;
+          color: #506070;
+        }
+        .verify-action-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 36px);
+          gap: 6px;
+        }
+      `}</style>
+      <div className="verify-shell">
       {/* Header */}
       <div className="row">
         <div className="col-12">
@@ -392,11 +429,19 @@ function VerifyComplaints() {
                 <i className="fas fa-clipboard-check me-2"></i>
                 Verify Complaints
               </span>
-              <div className="navbar-nav ms-auto">
-                <button className="btn btn-outline-light" onClick={goBack}>
+              <div className="navbar-nav ms-auto d-flex flex-row flex-wrap gap-2 align-items-center">
+                <Link to="/" className="btn btn-outline-light btn-sm">
+                  <i className="fas fa-home me-1"></i>
+                  Home
+                </Link>
+                <button type="button" className="btn btn-outline-light btn-sm" onClick={goBack}>
                   <i className="fas fa-arrow-left me-1"></i>
-                  Back to Dashboard
+                  Dashboard
                 </button>
+                <Link to="/signout" className="btn btn-outline-light btn-sm">
+                  <i className="fas fa-sign-out-alt me-1"></i>
+                  Sign Out
+                </Link>
               </div>
             </div>
           </nav>
@@ -406,20 +451,15 @@ function VerifyComplaints() {
       {/* Welcome Section */}
       <div className="row mt-3">
         <div className="col-12">
-          <div className="bg-light p-3 rounded shadow-sm">
+          <div className="verify-summary p-3 shadow-sm">
             <div className="container">
-              <div className="d-flex justify-content-between align-items-center">
+              <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
                 <div>
                   <h4 className="text-success mb-1">
                     <i className="fas fa-tasks me-2"></i>
                     Complaint Management Center
                   </h4>
-                  <p className="text-muted mb-0">
-                    Total: {complaints.length} | 
-                    Pending: {complaints.filter(c => !c.status || c.status.toLowerCase() === 'pending').length} | 
-                    In Progress: {complaints.filter(c => c.status?.toLowerCase() === 'in progress').length} | 
-                    Completed: {complaints.filter(c => c.status?.toLowerCase() === 'completed').length}
-                  </p>
+                  <p className="text-muted mb-0">Review, verify, reject, or notify students from one focused queue.</p>
                 </div>
                 <button 
                   className="btn btn-outline-success"
@@ -429,6 +469,26 @@ function VerifyComplaints() {
                   <i className="fas fa-sync-alt me-1"></i>
                   {loading ? 'Refreshing...' : 'Refresh'}
                 </button>
+              </div>
+              <div className="row g-3 mt-2">
+                {[
+                  ['Total', statusCounts.total, 'fa-layer-group', 'text-primary'],
+                  ['Pending', statusCounts.pending, 'fa-hourglass-half', 'text-secondary'],
+                  ['In Progress', statusCounts.inProgress, 'fa-play-circle', 'text-info'],
+                  ['Completed', statusCounts.completed, 'fa-check-double', 'text-success'],
+                  ['Verified', statusCounts.verified, 'fa-shield-alt', 'text-success'],
+                  ['Rejected', statusCounts.rejected, 'fa-times-circle', 'text-danger']
+                ].map(([label, value, icon, color]) => (
+                  <div className="col-6 col-md-4 col-xl-2" key={label}>
+                    <div className="verify-stat p-3">
+                      <div className={`mb-2 ${color}`}>
+                        <i className={`fas ${icon}`}></i>
+                      </div>
+                      <div className="h4 mb-0 fw-bold">{value}</div>
+                      <div className="small text-muted">{label}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -455,44 +515,44 @@ function VerifyComplaints() {
         <div className="col-12">
           <div className="container">
             <div className="card">
-              <div className="card-header bg-light">
-                <div className="d-flex justify-content-between align-items-center">
-                  <div className="btn-group" role="group">
+              <div className="card-header bg-white">
+                <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                  <div className="d-flex flex-wrap gap-2" role="group" aria-label="Complaint filters">
                     <button 
                       className={`btn btn-sm ${filter === 'all' ? 'btn-success' : 'btn-outline-success'}`}
                       onClick={() => setFilter('all')}
                     >
-                      All ({complaints.length})
+                      All ({statusCounts.total})
                     </button>
                     <button 
                       className={`btn btn-sm ${filter === 'pending' ? 'btn-warning' : 'btn-outline-warning'}`}
                       onClick={() => setFilter('pending')}
                     >
-                      Pending ({complaints.filter(c => !c.status || c.status.toLowerCase() === 'pending').length})
+                      Pending ({statusCounts.pending})
                     </button>
                     <button 
                       className={`btn btn-sm ${filter === 'in_progress' ? 'btn-info' : 'btn-outline-info'}`}
                       onClick={() => setFilter('in_progress')}
                     >
-                      In Progress ({complaints.filter(c => c.status?.toLowerCase() === 'in progress').length})
+                      In Progress ({statusCounts.inProgress})
                     </button>
                     <button 
                       className={`btn btn-sm ${filter === 'completed' ? 'btn-primary' : 'btn-outline-primary'}`}
                       onClick={() => setFilter('completed')}
                     >
-                      Completed ({complaints.filter(c => c.status?.toLowerCase() === 'completed').length})
+                      Completed ({statusCounts.completed})
                     </button>
                     <button 
                       className={`btn btn-sm ${filter === 'verified' ? 'btn-success' : 'btn-outline-success'}`}
                       onClick={() => setFilter('verified')}
                     >
-                      Verified ({complaints.filter(c => c.status?.toLowerCase() === 'verified').length})
+                      Verified ({statusCounts.verified})
                     </button>
                     <button 
                       className={`btn btn-sm ${filter === 'rejected' ? 'btn-danger' : 'btn-outline-danger'}`}
                       onClick={() => setFilter('rejected')}
                     >
-                      Rejected ({complaints.filter(c => c.status?.toLowerCase() === 'rejected').length})
+                      Rejected ({statusCounts.rejected})
                     </button>
                   </div>
                 </div>
@@ -521,7 +581,7 @@ function VerifyComplaints() {
 
                 {!loading && filteredComplaints.length > 0 && (
                   <div className="table-responsive">
-                    <table className="table table-hover mb-0">
+                    <table className="table table-hover align-middle mb-0 verify-table">
                       <thead className="table-success">
                         <tr>
                           <th>Complaint Details</th>
@@ -562,7 +622,7 @@ function VerifyComplaints() {
                                 <br />
                                 <small className="text-muted">
                                   <i className="fas fa-id-card me-1"></i>
-                                  ID: {complaint.studentId || 'N/A'}
+                                  ID: {complaint.studentRollNo || complaint.createdBy || 'N/A'}
                                 </small>
                               </div>
                             </td>
@@ -594,7 +654,7 @@ function VerifyComplaints() {
                               </small>
                             </td>
                             <td>
-                              <div className="btn-group-vertical" role="group">
+                              <div className="verify-action-grid" role="group" aria-label="Complaint actions">
                                 <button 
                                   className="btn btn-sm btn-outline-primary"
                                   onClick={() => viewComplaintDetails(complaint)}
@@ -721,7 +781,7 @@ function VerifyComplaints() {
                       <strong>Email:</strong> {selectedComplaint.studentEmail}
                     </div>
                     <div className="mb-3">
-                      <strong>Student ID:</strong> {selectedComplaint.studentId}
+                      <strong>Student ID:</strong> {selectedComplaint.studentRollNo || selectedComplaint.createdBy}
                     </div>
                     <div className="mb-3">
                       <strong>Created:</strong> {formatDate(selectedComplaint.createdAt)}
@@ -752,8 +812,8 @@ function VerifyComplaints() {
                           <option value="Pending">Pending</option>
                           <option value="In Progress">In Progress</option>
                           <option value="Completed">Completed</option>
-                          <option value="Verified">Verified</option>
-                          <option value="Rejected">Rejected</option>
+                          <option value="verified">Verified</option>
+                          <option value="rejected">Rejected</option>
                         </select>
                       </div>
                     </div>
@@ -921,6 +981,7 @@ function VerifyComplaints() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

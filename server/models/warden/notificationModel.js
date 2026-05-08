@@ -1,46 +1,53 @@
-// const mongoose = require('mongoose');
-
-// const notificationSchema = new mongoose.Schema({
-//     title: { 
-//         type: String, 
-//         required: true 
-//     },
-//     description: { 
-//         type: String, 
-//         required: true 
-//     },
-//     createdAt: { 
-//         type: Date, 
-//         default: Date.now 
-//     }
-// });
-
-// const Notification = mongoose.model('Notification', notificationSchema);
-// module.exports = Notification;
 const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema({
-  title:      
-    {   type: String, 
-        required: true
-    },
-  description:  { 
-    type: String, 
-    required: true 
-    },
-  // who should see it?
-  receiverId: {                // null  ➜ broadcast to everyone
-    type: String,
-    ref:  'Hosteller',
-    default: null
+  senderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true
   },
-  // link to a complaint when the message is about that complaint
-  complaintId: {
+  senderName: {
     type: String,
-    ref:  'Complaint',
-    default: null
+    required: true
   },
-  createdAt:  { type: Date, default: Date.now }
+  senderRole: {
+    type: String,
+    required: true,
+    enum: ['student', 'warden', 'admin']
+  },
+  recipientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true
+  },
+  recipientEmail: {
+    type: String,
+    required: true
+  },
+  title: {
+    type: String,
+    required: true,
+    maxLength: 100
+  },
+  message: {
+    type: String,
+    required: true,
+    maxLength: 500
+  },
+  type: {
+    type: String,
+    enum: ['general', 'complaint_update', 'urgent', 'system'],
+    default: 'general'
+  },
+  priority: {
+    type: String,
+    enum: ['low', 'normal', 'high'],
+    default: 'normal'
+  },
+  isRead: {
+    type: Boolean,
+    default: false
+  }
+}, {
+  timestamps: true
 });
 
 module.exports = mongoose.model('Notification', notificationSchema);

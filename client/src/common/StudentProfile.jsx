@@ -1,1410 +1,17 @@
-// import React, { useState, useEffect } from 'react';
-// import { useNavigate, useParams, Link } from 'react-router-dom';
-// import { useUser } from '../contexts/UserContext';
-
-// function StudentProfile() {
-//   const { studentId } = useParams();
-//   const navigate = useNavigate();
-//   const { currentUser, logout } = useUser();
-//   const [complaints, setComplaints] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState('');
-//   const [activeTab, setActiveTab] = useState('complaints'); // 'complaints' or 'profile'
-
-//   useEffect(() => {
-//     // Check if user is authenticated and matches the profile being viewed
-//     if (!currentUser || currentUser.Id !== studentId) {
-//       navigate('/signup');
-//       return;
-//     }
-    
-//     // Fetch complaints automatically on component load
-//     fetchAllComplaints();
-//   }, [currentUser, studentId, navigate]);
-
-//   const fetchAllComplaints = async () => {
-//     if (!currentUser) return;
-    
-//     setLoading(true);
-//     setError('');
-    
-//     try {
-//       const token = localStorage.getItem('authToken');
-//       const response = await fetch(`http://localhost:4700/student-api/complaints/${currentUser.Id}`, {
-//         method: 'GET',
-//         headers: {
-//           'Authorization': `Bearer ${token}`,
-//           'Content-Type': 'application/json'
-//         }
-//       });
-
-//       const result = await response.json();
-
-//       if (response.ok) {
-//         setComplaints(result.payload || []);
-//       } else {
-//         setError(result.message || 'Failed to fetch complaints');
-//       }
-//     } catch (error) {
-//       console.error('Error fetching complaints:', error);
-//       setError('Network error. Please check your connection.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleLogout = () => {
-//     logout();
-//     navigate('/signup');
-//   };
-
-//   const getStatusBadgeClass = (status) => {
-//     switch (status?.toLowerCase()) {
-//       case 'completed':
-//         return 'badge bg-success';
-//       case 'in progress':
-//         return 'badge bg-warning text-dark';
-//       case 'verified':
-//         return 'badge bg-info';
-//       case 'rejected':
-//         return 'badge bg-danger';
-//       default:
-//         return 'badge bg-secondary';
-//     }
-//   };
-
-//   const formatDate = (dateString) => {
-//     if (!dateString) return 'N/A';
-//     return new Date(dateString).toLocaleDateString('en-US', {
-//       year: 'numeric',
-//       month: 'short',
-//       day: 'numeric',
-//       hour: '2-digit',
-//       minute: '2-digit'
-//     });
-//   };
-
-//   if (!currentUser) {
-//     return (
-//       <div className="container">
-//         <div className="row justify-content-center mt-5">
-//           <div className="col-md-6">
-//             <div className="alert alert-warning text-center">
-//               <h4>Access Denied</h4>
-//               <p>Please log in to view your profile.</p>
-//               <button 
-//                 className="btn btn-primary"
-//                 onClick={() => navigate('/signup')}
-//               >
-//                 Go to Login
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="container-fluid">
-//       {/* Header Section */}
-//       <div className="row">
-//         <div className="col-12">
-//           <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-//             <div className="container">
-//               <span className="navbar-brand mb-0 h1">
-//                 <i className="fas fa-user-graduate me-2"></i>
-//                 Student Portal
-//               </span>
-              
-//               {/* Navigation Buttons */}
-//               <div className="navbar-nav ms-auto d-flex flex-row gap-2">
-//                 <button
-//                   className={`btn ${activeTab === 'complaints' ? 'btn-light' : 'btn-outline-light'} me-2`}
-//                   onClick={() => {
-//                     setActiveTab('complaints');
-//                     fetchAllComplaints();
-//                   }}
-//                 >
-//                   <i className="fas fa-list me-1"></i>
-//                   View All Complaints
-//                 </button>
-                
-//                 <Link 
-//                   to={`/student-profile/${studentId}/complaint-form`} 
-//                   className="btn btn-success me-2"
-//                 >
-//                   <i className="fas fa-plus me-1"></i>
-//                   Post Complaint
-//                 </Link>
-                
-//                 <button
-//                   className={`btn ${activeTab === 'profile' ? 'btn-light' : 'btn-outline-light'} me-2`}
-//                   onClick={() => setActiveTab('profile')}
-//                 >
-//                   <i className="fas fa-user me-1"></i>
-//                   Profile
-//                 </button>
-                
-//                 <button 
-//                   className="btn btn-outline-light"
-//                   onClick={handleLogout}
-//                 >
-//                   <i className="fas fa-sign-out-alt me-1"></i>
-//                   Logout
-//                 </button>
-//               </div>
-//             </div>
-//           </nav>
-//         </div>
-//       </div>
-
-//       {/* Welcome Section */}
-//       <div className="row mt-3">
-//         <div className="col-12">
-//           <div className="bg-light p-3 rounded shadow-sm">
-//             <div className="container">
-//               <h2 className="text-primary mb-1">
-//                 Welcome, {currentUser.firstName} {currentUser.lastName}!
-//               </h2>
-//               <p className="text-muted mb-0">
-//                 <i className="fas fa-id-card me-1"></i>
-//                 Roll No: <strong>{currentUser.Id}</strong> | 
-//                 <i className="fas fa-envelope ms-2 me-1"></i>
-//                 {currentUser.email} | 
-//                 <i className="fas fa-bed ms-2 me-1"></i>
-//                 Room: <strong>{currentUser.roomNumber || 'Not assigned'}</strong> | 
-//                 <i className="fas fa-building ms-2 me-1"></i>
-//                 Block: <strong>{currentUser.block || 'Not assigned'}</strong>
-//               </p>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Main Content */}
-//       <div className="row mt-4">
-//         <div className="col-12">
-//           <div className="container">
-            
-//             {/* Complaints Tab */}
-//             {activeTab === 'complaints' && (
-//               <div>
-//                 <div className="d-flex justify-content-between align-items-center mb-4">
-//                   <h3 className="text-dark">
-//                     <i className="fas fa-clipboard-list me-2"></i>
-//                     My Complaints
-//                   </h3>
-//                   <div className="d-flex gap-2">
-//                     <button 
-//                       className="btn btn-outline-primary btn-sm"
-//                       onClick={fetchAllComplaints}
-//                       disabled={loading}
-//                     >
-//                       <i className="fas fa-sync-alt me-1"></i>
-//                       {loading ? 'Refreshing...' : 'Refresh'}
-//                     </button>
-//                   </div>
-//                 </div>
-
-//                 {/* Error Message */}
-//                 {error && (
-//                   <div className="alert alert-danger" role="alert">
-//                     <i className="fas fa-exclamation-triangle me-2"></i>
-//                     {error}
-//                   </div>
-//                 )}
-
-//                 {/* Loading State */}
-//                 {loading && (
-//                   <div className="text-center py-5">
-//                     <div className="spinner-border text-primary" role="status">
-//                       <span className="visually-hidden">Loading...</span>
-//                     </div>
-//                     <p className="mt-2 text-muted">Loading your complaints...</p>
-//                   </div>
-//                 )}
-
-//                 {/* Complaints List */}
-//                 {!loading && !error && (
-//                   <div>
-//                     {complaints.length === 0 ? (
-//                       <div className="text-center py-5">
-//                         <div className="card border-0 bg-light">
-//                           <div className="card-body">
-//                             <i className="fas fa-clipboard fa-3x text-muted mb-3"></i>
-//                             <h5 className="text-muted">No Complaints Found</h5>
-//                             <p className="text-muted">You haven't filed any complaints yet.</p>
-//                             <Link to="/complaint-form" className="btn btn-primary">
-//                               <i className="fas fa-plus me-1"></i>
-//                               File Your First Complaint
-//                             </Link>
-//                           </div>
-//                         </div>
-//                       </div>
-//                     ) : (
-//                       <div className="row">
-//                         {complaints.map((complaint, index) => (
-//                           <div key={complaint._id || index} className="col-lg-6 col-md-6 col-sm-12 mb-4">
-//                             <div className="card h-100 shadow-sm border-start border-4 border-primary">
-//                               <div className="card-header bg-white d-flex justify-content-between align-items-center">
-//                                 <h6 className="mb-0 text-primary fw-bold">
-//                                   {complaint.title || 'No Title'}
-//                                 </h6>
-//                                 <span className={getStatusBadgeClass(complaint.status)}>
-//                                   {complaint.status || 'Not Started'}
-//                                 </span>
-//                               </div>
-//                               <div className="card-body">
-//                                 <p className="card-text text-muted">
-//                                   <strong>Description:</strong> {complaint.description || 'No description available'}
-//                                 </p>
-//                                 <div className="row">
-//                                   <div className="col-6">
-//                                     <small className="text-muted">
-//                                       <i className="fas fa-tag me-1"></i>
-//                                       <strong>Category:</strong> {complaint.category || 'N/A'}
-//                                     </small>
-//                                   </div>
-//                                   <div className="col-6">
-//                                     <small className="text-muted">
-//                                       <i className="fas fa-door-open me-1"></i>
-//                                       <strong>Room:</strong> {complaint.roomno || 'N/A'}
-//                                     </small>
-//                                   </div>
-//                                 </div>
-//                                 <div className="row mt-2">
-//                                   <div className="col-6">
-//                                     <small className="text-muted">
-//                                       <i className="fas fa-building me-1"></i>
-//                                       <strong>Block:</strong> {complaint.block || 'N/A'}
-//                                     </small>
-//                                   </div>
-//                                   <div className="col-6">
-//                                     <small className="text-muted">
-//                                       <i className="fas fa-calendar me-1"></i>
-//                                       <strong>Created:</strong> {formatDate(complaint.createdAt)}
-//                                     </small>
-//                                   </div>
-//                                 </div>
-//                               </div>
-//                               <div className="card-footer bg-white border-top-0">
-//                                 <small className="text-muted">
-//                                   <i className="fas fa-clock me-1"></i>
-//                                   Last Updated: {formatDate(complaint.updatedAt) || 'Never'}
-//                                 </small>
-//                               </div>
-//                             </div>
-//                           </div>
-//                         ))}
-//                       </div>
-//                     )}
-//                   </div>
-//                 )}
-//               </div>
-//             )}
-
-//             {/* Profile Tab */}
-//             {activeTab === 'profile' && (
-//               <div>
-//                 <h3 className="text-dark mb-4">
-//                   <i className="fas fa-user me-2"></i>
-//                   Profile Information
-//                 </h3>
-//                 <div className="row">
-//                   <div className="col-md-8">
-//                     <div className="card shadow-sm">
-//                       <div className="card-header bg-primary text-white">
-//                         <h5 className="mb-0">
-//                           <i className="fas fa-user-circle me-2"></i>
-//                           Personal Details
-//                         </h5>
-//                       </div>
-//                       <div className="card-body">
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Full Name:</strong></div>
-//                           <div className="col-sm-8">{currentUser.firstName} {currentUser.lastName}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Roll Number:</strong></div>
-//                           <div className="col-sm-8">{currentUser.Id}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Email:</strong></div>
-//                           <div className="col-sm-8">{currentUser.email}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Phone:</strong></div>
-//                           <div className="col-sm-8">{currentUser.phone || 'Not provided'}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Room Number:</strong></div>
-//                           <div className="col-sm-8">{currentUser.roomNumber || 'Not assigned'}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Block:</strong></div>
-//                           <div className="col-sm-8">{currentUser.block || 'Not assigned'}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Role:</strong></div>
-//                           <div className="col-sm-8">
-//                             <span className="badge bg-info">{currentUser.role || 'Student'}</span>
-//                           </div>
-//                         </div>
-//                       </div>
-//                       <div className="card-footer">
-//                         <button className="btn btn-outline-primary">
-//                           <i className="fas fa-edit me-1"></i>
-//                           Edit Profile
-//                         </button>
-//                       </div>
-//                     </div>
-//                   </div>
-//                   <div className="col-md-4">
-//                     <div className="card shadow-sm">
-//                       <div className="card-header bg-info text-white">
-//                         <h6 className="mb-0">
-//                           <i className="fas fa-chart-pie me-2"></i>
-//                           Quick Stats
-//                         </h6>
-//                       </div>
-//                       <div className="card-body">
-//                         <div className="d-flex justify-content-between align-items-center mb-2">
-//                           <span>Total Complaints:</span>
-//                           <span className="badge bg-primary">{complaints.length}</span>
-//                         </div>
-//                         <div className="d-flex justify-content-between align-items-center mb-2">
-//                           <span>Completed:</span>
-//                           <span className="badge bg-success">
-//                             {complaints.filter(c => c.status?.toLowerCase() === 'completed').length}
-//                           </span>
-//                         </div>
-//                         <div className="d-flex justify-content-between align-items-center mb-2">
-//                           <span>In Progress:</span>
-//                           <span className="badge bg-warning text-dark">
-//                             {complaints.filter(c => c.status?.toLowerCase() === 'in progress').length}
-//                           </span>
-//                         </div>
-//                         <div className="d-flex justify-content-between align-items-center">
-//                           <span>Pending:</span>
-//                           <span className="badge bg-secondary">
-//                             {complaints.filter(c => !c.status || c.status?.toLowerCase() === 'not done yet').length}
-//                           </span>
-//                         </div>
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </div>
-//               </div>
-//             )}
-
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default StudentProfile;
-
-// import React, { useState, useEffect } from 'react';
-// import { useNavigate, useParams, Link } from 'react-router-dom';
-// import { useUser } from '../contexts/UserContext';
-
-// function StudentProfile() {
-//   const { studentId } = useParams();
-//   const navigate = useNavigate();
-//   const { currentUser, logout } = useUser();
-//   const [complaints, setComplaints] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState('');
-//   const [activeTab, setActiveTab] = useState('complaints'); // 'complaints' or 'profile'
-
-//   useEffect(() => {
-//     // Check if user is authenticated and matches the profile being viewed
-//     if (!currentUser || currentUser.Id !== studentId) {
-//       navigate('/signup');
-//       return;
-//     }
-    
-//     // Fetch complaints automatically on component load
-//     fetchAllComplaints();
-//   }, [currentUser, studentId, navigate]);
-
-//   const fetchAllComplaints = async () => {
-//     if (!currentUser) return;
-    
-//     setLoading(true);
-//     setError('');
-    
-//     try {
-//       const token = localStorage.getItem('authToken');
-//       const response = await fetch(`http://localhost:4700/student-api/complaints/${currentUser.Id}`, {
-//         method: 'GET',
-//         headers: {
-//           'Authorization': `Bearer ${token}`,
-//           'Content-Type': 'application/json'
-//         }
-//       });
-
-//       const result = await response.json();
-
-//       if (response.ok) {
-//         setComplaints(result.payload || []);
-//       } else {
-//         setError(result.message || 'Failed to fetch complaints');
-//       }
-//     } catch (error) {
-//       console.error('Error fetching complaints:', error);
-//       setError('Network error. Please check your connection.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleLogout = () => {
-//     logout();
-//     navigate('/signup');
-//   };
-
-//   const getStatusBadgeClass = (status) => {
-//     switch (status?.toLowerCase()) {
-//       case 'completed':
-//         return 'badge bg-success';
-//       case 'in progress':
-//         return 'badge bg-warning text-dark';
-//       case 'verified':
-//         return 'badge bg-info';
-//       case 'rejected':
-//         return 'badge bg-danger';
-//       default:
-//         return 'badge bg-secondary';
-//     }
-//   };
-
-//   const formatDate = (dateString) => {
-//     if (!dateString) return 'N/A';
-//     return new Date(dateString).toLocaleDateString('en-US', {
-//       year: 'numeric',
-//       month: 'short',
-//       day: 'numeric',
-//       hour: '2-digit',
-//       minute: '2-digit'
-//     });
-//   };
-
-//   if (!currentUser) {
-//     return (
-//       <div className="container">
-//         <div className="row justify-content-center mt-5">
-//           <div className="col-md-6">
-//             <div className="alert alert-warning text-center">
-//               <h4>Access Denied</h4>
-//               <p>Please log in to view your profile.</p>
-//               <button 
-//                 className="btn btn-primary"
-//                 onClick={() => navigate('/signup')}
-//               >
-//                 Go to Login
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="container-fluid">
-//       {/* Header Section */}
-//       <div className="row">
-//         <div className="col-12">
-//           <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-//             <div className="container">
-//               <span className="navbar-brand mb-0 h1">
-//                 <i className="fas fa-user-graduate me-2"></i>
-//                 Student Portal
-//               </span>
-              
-//               {/* Navigation Buttons */}
-//               <div className="navbar-nav ms-auto d-flex flex-row gap-2">
-//                 <button
-//                   className={`btn ${activeTab === 'complaints' ? 'btn-light' : 'btn-outline-light'} me-2`}
-//                   onClick={() => {
-//                     setActiveTab('complaints');
-//                     fetchAllComplaints();
-//                   }}
-//                 >
-//                   <i className="fas fa-list me-1"></i>
-//                   View All Complaints
-//                 </button>
-                
-//                 {/* Fixed Link path - removed nested route structure */}
-//                 <Link 
-//                   to={`/student-profile/${studentId}/complaint-form`} 
-//                   className="btn btn-success me-2"
-//                 >
-//                   <i className="fas fa-plus me-1"></i>
-//                   Post Complaint
-//                 </Link>
-                
-//                 <button
-//                   className={`btn ${activeTab === 'profile' ? 'btn-light' : 'btn-outline-light'} me-2`}
-//                   onClick={() => setActiveTab('profile')}
-//                 >
-//                   <i className="fas fa-user me-1"></i>
-//                   Profile
-//                 </button>
-                
-//                 <button 
-//                   className="btn btn-outline-light"
-//                   onClick={handleLogout}
-//                 >
-//                   <i className="fas fa-sign-out-alt me-1"></i>
-//                   Logout
-//                 </button>
-//               </div>
-//             </div>
-//           </nav>
-//         </div>
-//       </div>
-
-//       {/* Welcome Section */}
-//       <div className="row mt-3">
-//         <div className="col-12">
-//           <div className="bg-light p-3 rounded shadow-sm">
-//             <div className="container">
-//               <h2 className="text-primary mb-1">
-//                 Welcome, {currentUser.firstName} {currentUser.lastName}!
-//               </h2>
-//               <p className="text-muted mb-0">
-//                 <i className="fas fa-id-card me-1"></i>
-//                 Roll No: <strong>{currentUser.Id}</strong> | 
-//                 <i className="fas fa-envelope ms-2 me-1"></i>
-//                 {currentUser.email} | 
-//                 <i className="fas fa-bed ms-2 me-1"></i>
-//                 Room: <strong>{currentUser.roomNumber || 'Not assigned'}</strong> | 
-//                 <i className="fas fa-building ms-2 me-1"></i>
-//                 Block: <strong>{currentUser.block || 'Not assigned'}</strong>
-//               </p>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Main Content */}
-//       <div className="row mt-4">
-//         <div className="col-12">
-//           <div className="container">
-            
-//             {/* Complaints Tab */}
-//             {activeTab === 'complaints' && (
-//               <div>
-//                 <div className="d-flex justify-content-between align-items-center mb-4">
-//                   <h3 className="text-dark">
-//                     <i className="fas fa-clipboard-list me-2"></i>
-//                     My Complaints
-//                   </h3>
-//                   <div className="d-flex gap-2">
-//                     <button 
-//                       className="btn btn-outline-primary btn-sm"
-//                       onClick={fetchAllComplaints}
-//                       disabled={loading}
-//                     >
-//                       <i className="fas fa-sync-alt me-1"></i>
-//                       {loading ? 'Refreshing...' : 'Refresh'}
-//                     </button>
-//                   </div>
-//                 </div>
-
-//                 {/* Error Message */}
-//                 {error && (
-//                   <div className="alert alert-danger" role="alert">
-//                     <i className="fas fa-exclamation-triangle me-2"></i>
-//                     {error}
-//                   </div>
-//                 )}
-
-//                 {/* Loading State */}
-//                 {loading && (
-//                   <div className="text-center py-5">
-//                     <div className="spinner-border text-primary" role="status">
-//                       <span className="visually-hidden">Loading...</span>
-//                     </div>
-//                     <p className="mt-2 text-muted">Loading your complaints...</p>
-//                   </div>
-//                 )}
-
-//                 {/* Complaints List */}
-//                 {!loading && !error && (
-//                   <div>
-//                     {complaints.length === 0 ? (
-//                       <div className="text-center py-5">
-//                         <div className="card border-0 bg-light">
-//                           <div className="card-body">
-//                             <i className="fas fa-clipboard fa-3x text-muted mb-3"></i>
-//                             <h5 className="text-muted">No Complaints Found</h5>
-//                             <p className="text-muted">You haven't filed any complaints yet.</p>
-//                             {/* Fixed Link path here too */}
-//                             <Link to={`/student-profile/${studentId}/complaint-form`} className="btn btn-primary">
-//                               <i className="fas fa-plus me-1"></i>
-//                               File Your First Complaint
-//                             </Link>
-//                           </div>
-//                         </div>
-//                       </div>
-//                     ) : (
-//                       <div className="row">
-//                         {complaints.map((complaint, index) => (
-//                           <div key={complaint._id || index} className="col-lg-6 col-md-6 col-sm-12 mb-4">
-//                             <div className="card h-100 shadow-sm border-start border-4 border-primary">
-//                               <div className="card-header bg-white d-flex justify-content-between align-items-center">
-//                                 <h6 className="mb-0 text-primary fw-bold">
-//                                   {complaint.title || 'No Title'}
-//                                 </h6>
-//                                 <span className={getStatusBadgeClass(complaint.status)}>
-//                                   {complaint.status || 'Not Started'}
-//                                 </span>
-//                               </div>
-//                               <div className="card-body">
-//                                 <p className="card-text text-muted">
-//                                   <strong>Description:</strong> {complaint.description || 'No description available'}
-//                                 </p>
-//                                 <div className="row">
-//                                   <div className="col-6">
-//                                     <small className="text-muted">
-//                                       <i className="fas fa-tag me-1"></i>
-//                                       <strong>Category:</strong> {complaint.category || 'N/A'}
-//                                     </small>
-//                                   </div>
-//                                   <div className="col-6">
-//                                     <small className="text-muted">
-//                                       <i className="fas fa-door-open me-1"></i>
-//                                       <strong>Room:</strong> {complaint.roomno || 'N/A'}
-//                                     </small>
-//                                   </div>
-//                                 </div>
-//                                 <div className="row mt-2">
-//                                   <div className="col-6">
-//                                     <small className="text-muted">
-//                                       <i className="fas fa-building me-1"></i>
-//                                       <strong>Block:</strong> {complaint.block || 'N/A'}
-//                                     </small>
-//                                   </div>
-//                                   <div className="col-6">
-//                                     <small className="text-muted">
-//                                       <i className="fas fa-calendar me-1"></i>
-//                                       <strong>Created:</strong> {formatDate(complaint.createdAt)}
-//                                     </small>
-//                                   </div>
-//                                 </div>
-//                               </div>
-//                               <div className="card-footer bg-white border-top-0">
-//                                 <small className="text-muted">
-//                                   <i className="fas fa-clock me-1"></i>
-//                                   Last Updated: {formatDate(complaint.updatedAt) || 'Never'}
-//                                 </small>
-//                               </div>
-//                             </div>
-//                           </div>
-//                         ))}
-//                       </div>
-//                     )}
-//                   </div>
-//                 )}
-//               </div>
-//             )}
-
-//             {/* Profile Tab */}
-//             {activeTab === 'profile' && (
-//               <div>
-//                 <h3 className="text-dark mb-4">
-//                   <i className="fas fa-user me-2"></i>
-//                   Profile Information
-//                 </h3>
-//                 <div className="row">
-//                   <div className="col-md-8">
-//                     <div className="card shadow-sm">
-//                       <div className="card-header bg-primary text-white">
-//                         <h5 className="mb-0">
-//                           <i className="fas fa-user-circle me-2"></i>
-//                           Personal Details
-//                         </h5>
-//                       </div>
-//                       <div className="card-body">
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Full Name:</strong></div>
-//                           <div className="col-sm-8">{currentUser.firstName} {currentUser.lastName}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Roll Number:</strong></div>
-//                           <div className="col-sm-8">{currentUser.Id}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Email:</strong></div>
-//                           <div className="col-sm-8">{currentUser.email}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Phone:</strong></div>
-//                           <div className="col-sm-8">{currentUser.phone || 'Not provided'}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Room Number:</strong></div>
-//                           <div className="col-sm-8">{currentUser.roomNumber || 'Not assigned'}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Block:</strong></div>
-//                           <div className="col-sm-8">{currentUser.block || 'Not assigned'}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Role:</strong></div>
-//                           <div className="col-sm-8">
-//                             <span className="badge bg-info">{currentUser.role || 'Student'}</span>
-//                           </div>
-//                         </div>
-//                       </div>
-//                       <div className="card-footer">
-//                         <button className="btn btn-outline-primary">
-//                           <i className="fas fa-edit me-1"></i>
-//                           Edit Profile
-//                         </button>
-//                       </div>
-//                     </div>
-//                   </div>
-//                   <div className="col-md-4">
-//                     <div className="card shadow-sm">
-//                       <div className="card-header bg-info text-white">
-//                         <h6 className="mb-0">
-//                           <i className="fas fa-chart-pie me-2"></i>
-//                           Quick Stats
-//                         </h6>
-//                       </div>
-//                       <div className="card-body">
-//                         <div className="d-flex justify-content-between align-items-center mb-2">
-//                           <span>Total Complaints:</span>
-//                           <span className="badge bg-primary">{complaints.length}</span>
-//                         </div>
-//                         <div className="d-flex justify-content-between align-items-center mb-2">
-//                           <span>Completed:</span>
-//                           <span className="badge bg-success">
-//                             {complaints.filter(c => c.status?.toLowerCase() === 'completed').length}
-//                           </span>
-//                         </div>
-//                         <div className="d-flex justify-content-between align-items-center mb-2">
-//                           <span>In Progress:</span>
-//                           <span className="badge bg-warning text-dark">
-//                             {complaints.filter(c => c.status?.toLowerCase() === 'in progress').length}
-//                           </span>
-//                         </div>
-//                         <div className="d-flex justify-content-between align-items-center">
-//                           <span>Pending:</span>
-//                           <span className="badge bg-secondary">
-//                             {complaints.filter(c => !c.status || c.status?.toLowerCase() === 'not done yet').length}
-//                           </span>
-//                         </div>
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </div>
-//               </div>
-//             )}
-
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default StudentProfile;
-
-// import React, { useState, useEffect } from 'react';
-// import { useNavigate, useParams, Link } from 'react-router-dom';
-// import { useUser } from '../contexts/UserContext';
-
-// function StudentProfile() {
-//   const { studentId } = useParams();
-//   const navigate = useNavigate();
-//   const { currentUser, logout } = useUser();
-//   const [complaints, setComplaints] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState('');
-//   const [activeTab, setActiveTab] = useState('complaints');
-//   const [hasOpenComplaint, setHasOpenComplaint] = useState(false);
-//   const [actionLoading, setActionLoading] = useState(null); // Track loading state for specific actions
-
-//   useEffect(() => {
-//     // Check if user is authenticated and matches the profile being viewed
-//     if (!currentUser || currentUser.Id !== studentId) {
-//       navigate('/signup');
-//       return;
-//     }
-    
-//     // Fetch complaints automatically on component load
-//     fetchAllComplaints();
-//   }, [currentUser, studentId, navigate]);
-
-//   const fetchAllComplaints = async () => {
-//     if (!currentUser) return;
-    
-//     setLoading(true);
-//     setError('');
-    
-//     try {
-//       const token = localStorage.getItem('authToken');
-//       const response = await fetch(`http://localhost:4700/student-api/complaints/${currentUser.Id}`, {
-//         method: 'GET',
-//         headers: {
-//           'Authorization': `Bearer ${token}`,
-//           'Content-Type': 'application/json'
-//         }
-//       });
-
-//       const result = await response.json();
-
-//       if (response.ok) {
-//         setComplaints(result.payload || []);
-//         // Check if there's any open complaint
-//         const openComplaint = result.payload?.find(complaint => 
-//           complaint.status !== 'Completed' && complaint.status !== 'verified'
-//         );
-//         setHasOpenComplaint(!!openComplaint);
-//       } else {
-//         setError(result.message || 'Failed to fetch complaints');
-//       }
-//     } catch (error) {
-//       console.error('Error fetching complaints:', error);
-//       setError('Network error. Please check your connection.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleCompleteComplaint = async (complaintId) => {
-//     setActionLoading(complaintId);
-//     try {
-//       const token = localStorage.getItem('authToken');
-//       const response = await fetch(`http://localhost:4700/student-api/${currentUser.Id}/complaints/${complaintId}/status`, {
-//         method: 'PUT',
-//         headers: {
-//           'Authorization': `Bearer ${token}`,
-//           'Content-Type': 'application/json'
-//         },
-//         body: JSON.stringify({ status: 'Completed' })
-//       });
-
-//       const result = await response.json();
-
-//       if (response.ok) {
-//         // Refresh complaints list
-//         fetchAllComplaints();
-//         setError(''); // Clear any previous errors
-//       } else {
-//         setError(result.message || 'Failed to update complaint status');
-//       }
-//     } catch (error) {
-//       console.error('Error updating complaint status:', error);
-//       setError('Network error. Please try again.');
-//     } finally {
-//       setActionLoading(null);
-//     }
-//   };
-
-//   const handleDeleteComplaint = async (complaintId) => {
-//     if (!window.confirm('Are you sure you want to delete this complaint? This action cannot be undone.')) {
-//       return;
-//     }
-
-//     setActionLoading(complaintId);
-//     try {
-//       const token = localStorage.getItem('authToken');
-//       const response = await fetch(`http://localhost:4700/student-api/complaint/delete/${complaintId}`, {
-//         method: 'DELETE',
-//         headers: {
-//           'Authorization': `Bearer ${token}`,
-//           'Content-Type': 'application/json'
-//         }
-//       });
-
-//       const result = await response.json();
-
-//       if (response.ok) {
-//         // Refresh complaints list
-//         fetchAllComplaints();
-//         setError(''); // Clear any previous errors
-//       } else {
-//         setError(result.message || 'Failed to delete complaint');
-//       }
-//     } catch (error) {
-//       console.error('Error deleting complaint:', error);
-//       setError('Network error. Please try again.');
-//     } finally {
-//       setActionLoading(null);
-//     }
-//   };
-
-//   const handleLogout = () => {
-//     logout();
-//     navigate('/signup');
-//   };
-
-//   const getStatusBadgeClass = (status) => {
-//     switch (status?.toLowerCase()) {
-//       case 'completed':
-//         return 'badge bg-success';
-//       case 'in progress':
-//         return 'badge bg-warning text-dark';
-//       case 'verified':
-//         return 'badge bg-info';
-//       case 'rejected':
-//         return 'badge bg-danger';
-//       default:
-//         return 'badge bg-secondary';
-//     }
-//   };
-
-//   const formatDate = (dateString) => {
-//     if (!dateString) return 'N/A';
-//     return new Date(dateString).toLocaleDateString('en-US', {
-//       year: 'numeric',
-//       month: 'short',
-//       day: 'numeric',
-//       hour: '2-digit',
-//       minute: '2-digit'
-//     });
-//   };
-
-//   const canEditComplaint = (status) => {
-//     const lockedStatuses = ['Resolved', 'Completed', 'verified'];
-//     return !lockedStatuses.includes(status);
-//   };
-
-//   if (!currentUser) {
-//     return (
-//       <div className="container">
-//         <div className="row justify-content-center mt-5">
-//           <div className="col-md-6">
-//             <div className="alert alert-warning text-center">
-//               <h4>Access Denied</h4>
-//               <p>Please log in to view your profile.</p>
-//               <button 
-//                 className="btn btn-primary"
-//                 onClick={() => navigate('/signup')}
-//               >
-//                 Go to Login
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="container-fluid">
-//       {/* Header Section */}
-//       <div className="row">
-//         <div className="col-12">
-//           <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-//             <div className="container">
-//               <span className="navbar-brand mb-0 h1">
-//                 <i className="fas fa-user-graduate me-2"></i>
-//                 Student Portal
-//               </span>
-              
-//               {/* Navigation Buttons */}
-//               <div className="navbar-nav ms-auto d-flex flex-row gap-2">
-//                 <button
-//                   className={`btn ${activeTab === 'complaints' ? 'btn-light' : 'btn-outline-light'} me-2`}
-//                   onClick={() => {
-//                     setActiveTab('complaints');
-//                     fetchAllComplaints();
-//                   }}
-//                 >
-//                   <i className="fas fa-list me-1"></i>
-//                   View All Complaints
-//                 </button>
-                
-//                 {/* Conditional Post Complaint Button */}
-//                 {hasOpenComplaint ? (
-//                   <button 
-//                     className="btn btn-secondary me-2" 
-//                     disabled
-//                     title="You have an unresolved complaint. Please resolve it first."
-//                   >
-//                     <i className="fas fa-lock me-1"></i>
-//                     Post Complaint (Locked)
-//                   </button>
-//                 ) : (
-//                   <Link 
-//                     to={`/student-profile/${studentId}/complaint-form`} 
-//                     className="btn btn-success me-2"
-//                   >
-//                     <i className="fas fa-plus me-1"></i>
-//                     Post Complaint
-//                   </Link>
-//                 )}
-                
-//                 <button
-//                   className={`btn ${activeTab === 'profile' ? 'btn-light' : 'btn-outline-light'} me-2`}
-//                   onClick={() => setActiveTab('profile')}
-//                 >
-//                   <i className="fas fa-user me-1"></i>
-//                   Profile
-//                 </button>
-                
-//                 <button 
-//                   className="btn btn-outline-light"
-//                   onClick={handleLogout}
-//                 >
-//                   <i className="fas fa-sign-out-alt me-1"></i>
-//                   Logout
-//                 </button>
-//               </div>
-//             </div>
-//           </nav>
-//         </div>
-//       </div>
-
-//       {/* Welcome Section */}
-//       <div className="row mt-3">
-//         <div className="col-12">
-//           <div className="bg-light p-3 rounded shadow-sm">
-//             <div className="container">
-//               <h2 className="text-primary mb-1">
-//                 Welcome, {currentUser.firstName} {currentUser.lastName}!
-//               </h2>
-//               <p className="text-muted mb-0">
-//                 <i className="fas fa-id-card me-1"></i>
-//                 Roll No: <strong>{currentUser.Id}</strong> | 
-//                 <i className="fas fa-envelope ms-2 me-1"></i>
-//                 {currentUser.email} | 
-//                 <i className="fas fa-bed ms-2 me-1"></i>
-//                 Room: <strong>{currentUser.roomNumber || 'Not assigned'}</strong> | 
-//                 <i className="fas fa-building ms-2 me-1"></i>
-//                 Block: <strong>{currentUser.block || 'Not assigned'}</strong>
-//               </p>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Alert for Open Complaints */}
-//       {hasOpenComplaint && (
-//         <div className="row mt-3">
-//           <div className="col-12">
-//             <div className="container">
-//               <div className="alert alert-warning d-flex align-items-center" role="alert">
-//                 <i className="fas fa-exclamation-triangle me-2"></i>
-//                 <strong>Notice:</strong> You have an unresolved complaint. Please resolve your previous complaint before raising a new one.
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Main Content */}
-//       <div className="row mt-4">
-//         <div className="col-12">
-//           <div className="container">
-            
-//             {/* Complaints Tab */}
-//             {activeTab === 'complaints' && (
-//               <div>
-//                 <div className="d-flex justify-content-between align-items-center mb-4">
-//                   <h3 className="text-dark">
-//                     <i className="fas fa-clipboard-list me-2"></i>
-//                     My Complaints
-//                   </h3>
-//                   <div className="d-flex gap-2">
-//                     <button 
-//                       className="btn btn-outline-primary btn-sm"
-//                       onClick={fetchAllComplaints}
-//                       disabled={loading}
-//                     >
-//                       <i className="fas fa-sync-alt me-1"></i>
-//                       {loading ? 'Refreshing...' : 'Refresh'}
-//                     </button>
-//                   </div>
-//                 </div>
-
-//                 {/* Error Message */}
-//                 {error && (
-//                   <div className="alert alert-danger" role="alert">
-//                     <i className="fas fa-exclamation-triangle me-2"></i>
-//                     {error}
-//                     <button 
-//                       type="button" 
-//                       className="btn-close" 
-//                       onClick={() => setError('')}
-//                       aria-label="Close"
-//                     ></button>
-//                   </div>
-//                 )}
-
-//                 {/* Loading State */}
-//                 {loading && (
-//                   <div className="text-center py-5">
-//                     <div className="spinner-border text-primary" role="status">
-//                       <span className="visually-hidden">Loading...</span>
-//                     </div>
-//                     <p className="mt-2 text-muted">Loading your complaints...</p>
-//                   </div>
-//                 )}
-
-//                 {/* Complaints List */}
-//                 {!loading && !error && (
-//                   <div>
-//                     {complaints.length === 0 ? (
-//                       <div className="text-center py-5">
-//                         <div className="card border-0 bg-light">
-//                           <div className="card-body">
-//                             <i className="fas fa-clipboard fa-3x text-muted mb-3"></i>
-//                             <h5 className="text-muted">No Complaints Found</h5>
-//                             <p className="text-muted">You haven't filed any complaints yet.</p>
-//                             <Link to={`/student-profile/${studentId}/complaint-form`} className="btn btn-primary">
-//                               <i className="fas fa-plus me-1"></i>
-//                               File Your First Complaint
-//                             </Link>
-//                           </div>
-//                         </div>
-//                       </div>
-//                     ) : (
-//                       <div className="row">
-//                         {complaints.map((complaint, index) => (
-//                           <div key={complaint._id || index} className="col-lg-6 col-md-6 col-sm-12 mb-4">
-//                             <div className="card h-100 shadow-sm border-start border-4 border-primary">
-//                               <div className="card-header bg-white d-flex justify-content-between align-items-center">
-//                                 <h6 className="mb-0 text-primary fw-bold">
-//                                   {complaint.title || 'No Title'}
-//                                 </h6>
-//                                 <span className={getStatusBadgeClass(complaint.status)}>
-//                                   {complaint.status || 'Not Started'}
-//                                 </span>
-//                               </div>
-//                               <div className="card-body">
-//                                 <p className="card-text text-muted">
-//                                   <strong>Description:</strong> {complaint.description || 'No description available'}
-//                                 </p>
-//                                 <div className="row">
-//                                   <div className="col-6">
-//                                     <small className="text-muted">
-//                                       <i className="fas fa-tag me-1"></i>
-//                                       <strong>Category:</strong> {complaint.category || 'N/A'}
-//                                     </small>
-//                                   </div>
-//                                   <div className="col-6">
-//                                     <small className="text-muted">
-//                                       <i className="fas fa-door-open me-1"></i>
-//                                       <strong>Room:</strong> {complaint.roomno || 'N/A'}
-//                                     </small>
-//                                   </div>
-//                                 </div>
-//                                 <div className="row mt-2">
-//                                   <div className="col-6">
-//                                     <small className="text-muted">
-//                                       <i className="fas fa-building me-1"></i>
-//                                       <strong>Block:</strong> {complaint.block || 'N/A'}
-//                                     </small>
-//                                   </div>
-//                                   <div className="col-6">
-//                                     <small className="text-muted">
-//                                       <i className="fas fa-calendar me-1"></i>
-//                                       <strong>Created:</strong> {formatDate(complaint.createdAt)}
-//                                     </small>
-//                                   </div>
-//                                 </div>
-//                               </div>
-                              
-//                               {/* Action Buttons */}
-//                               <div className="card-footer bg-white border-top">
-//                                 <div className="d-flex justify-content-between align-items-center">
-//                                   <small className="text-muted">
-//                                     <i className="fas fa-clock me-1"></i>
-//                                     Updated: {formatDate(complaint.updatedAt) || 'Never'}
-//                                   </small>
-                                  
-//                                   <div className="btn-group" role="group">
-//                                     {/* Complete Button - Only show if not completed */}
-//                                     {complaint.status !== 'Completed' && complaint.status !== 'verified' && (
-//                                       <button
-//                                         className="btn btn-success btn-sm"
-//                                         onClick={() => handleCompleteComplaint(complaint._id)}
-//                                         disabled={actionLoading === complaint._id}
-//                                         title="Mark as completed"
-//                                       >
-//                                         {actionLoading === complaint._id ? (
-//                                           <span className="spinner-border spinner-border-sm" role="status"></span>
-//                                         ) : (
-//                                           <i className="fas fa-check"></i>
-//                                         )}
-//                                       </button>
-//                                     )}
-                                    
-//                                     {/* Edit Button - Only show if complaint can be edited */}
-//                                     {canEditComplaint(complaint.status) && (
-//                                       <button
-//                                         className="btn btn-warning btn-sm"
-//                                         onClick={() => {
-//                                           // Navigate to edit form or implement inline editing
-//                                           console.log('Edit complaint:', complaint._id);
-//                                           // You can implement this by creating an edit route or modal
-//                                         }}
-//                                         title="Edit complaint"
-//                                       >
-//                                         <i className="fas fa-edit"></i>
-//                                       </button>
-//                                     )}
-                                    
-//                                     {/* Delete Button */}
-//                                     <button
-//                                       className="btn btn-danger btn-sm"
-//                                       onClick={() => handleDeleteComplaint(complaint._id)}
-//                                       disabled={actionLoading === complaint._id}
-//                                       title="Delete complaint"
-//                                     >
-//                                       {actionLoading === complaint._id ? (
-//                                         <span className="spinner-border spinner-border-sm" role="status"></span>
-//                                       ) : (
-//                                         <i className="fas fa-trash"></i>
-//                                       )}
-//                                     </button>
-//                                   </div>
-//                                 </div>
-//                               </div>
-//                             </div>
-//                           </div>
-//                         ))}
-//                       </div>
-//                     )}
-//                   </div>
-//                 )}
-//               </div>
-//             )}
-
-//             {/* Profile Tab */}
-//             {activeTab === 'profile' && (
-//               <div>
-//                 <h3 className="text-dark mb-4">
-//                   <i className="fas fa-user me-2"></i>
-//                   Profile Information
-//                 </h3>
-//                 <div className="row">
-//                   <div className="col-md-8">
-//                     <div className="card shadow-sm">
-//                       <div className="card-header bg-primary text-white">
-//                         <h5 className="mb-0">
-//                           <i className="fas fa-user-circle me-2"></i>
-//                           Personal Details
-//                         </h5>
-//                       </div>
-//                       <div className="card-body">
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Full Name:</strong></div>
-//                           <div className="col-sm-8">{currentUser.firstName} {currentUser.lastName}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Roll Number:</strong></div>
-//                           <div className="col-sm-8">{currentUser.Id}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Email:</strong></div>
-//                           <div className="col-sm-8">{currentUser.email}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Phone:</strong></div>
-//                           <div className="col-sm-8">{currentUser.phone || 'Not provided'}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Room Number:</strong></div>
-//                           <div className="col-sm-8">{currentUser.roomNumber || 'Not assigned'}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Block:</strong></div>
-//                           <div className="col-sm-8">{currentUser.block || 'Not assigned'}</div>
-//                         </div>
-//                         <div className="row mb-3">
-//                           <div className="col-sm-4"><strong>Role:</strong></div>
-//                           <div className="col-sm-8">
-//                             <span className="badge bg-info">{currentUser.role || 'Student'}</span>
-//                           </div>
-//                         </div>
-//                       </div>
-//                       <div className="card-footer">
-//                         <button className="btn btn-outline-primary">
-//                           <i className="fas fa-edit me-1"></i>
-//                           Edit Profile
-//                         </button>
-//                       </div>
-//                     </div>
-//                   </div>
-//                   <div className="col-md-4">
-//                     <div className="card shadow-sm">
-//                       <div className="card-header bg-info text-white">
-//                         <h6 className="mb-0">
-//                           <i className="fas fa-chart-pie me-2"></i>
-//                           Quick Stats
-//                         </h6>
-//                       </div>
-//                       <div className="card-body">
-//                         <div className="d-flex justify-content-between align-items-center mb-2">
-//                           <span>Total Complaints:</span>
-//                           <span className="badge bg-primary">{complaints.length}</span>
-//                         </div>
-//                         <div className="d-flex justify-content-between align-items-center mb-2">
-//                           <span>Completed:</span>
-//                           <span className="badge bg-success">
-//                             {complaints.filter(c => c.status?.toLowerCase() === 'completed').length}
-//                           </span>
-//                         </div>
-//                         <div className="d-flex justify-content-between align-items-center mb-2">
-//                           <span>In Progress:</span>
-//                           <span className="badge bg-warning text-dark">
-//                             {complaints.filter(c => c.status?.toLowerCase() === 'in progress').length}
-//                           </span>
-//                         </div>
-//                         <div className="d-flex justify-content-between align-items-center">
-//                           <span>Pending:</span>
-//                           <span className="badge bg-secondary">
-//                             {complaints.filter(c => !c.status || c.status?.toLowerCase() === 'not started').length}
-//                           </span>
-//                         </div>
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </div>
-//               </div>
-//             )}
-
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default StudentProfile;
-
-
-
-
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 
 function StudentProfile() {
   const { studentId } = useParams();
   const navigate = useNavigate();
-  const { currentUser, logout } = useUser();
+  const { currentUser, logout, notifications, loadNotifications } = useUser();
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('complaints');
   const [hasOpenComplaint, setHasOpenComplaint] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
-  
-  // Add missing state for profile editing
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
     firstName: '',
@@ -1415,26 +22,20 @@ function StudentProfile() {
     year: '',
     branch: ''
   });
-  
-  // Add missing state for complaint editing
   const [editingComplaintId, setEditingComplaintId] = useState(null);
   const [complaintData, setComplaintData] = useState({
     title: '',
     description: '',
     category: ''
   });
-  
-  // Add message state for user feedback
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    // Check if user is authenticated and matches the profile being viewed
-    if (!currentUser || currentUser.Id !== studentId) {
+    if (!currentUser || String(currentUser.Id) !== String(studentId)) {
       navigate('/signup');
       return;
     }
     
-    // Initialize profile data
     setProfileData({
       firstName: currentUser.firstName || '',
       lastName: currentUser.lastName || '',
@@ -1445,9 +46,11 @@ function StudentProfile() {
       branch: currentUser.branch || ''
     });
     
-    // Fetch complaints automatically on component load
     fetchAllComplaints();
-  }, [currentUser, studentId, navigate]);
+    if (currentUser._id) {
+      loadNotifications(String(currentUser._id), currentUser.role || 'student');
+    }
+  }, [currentUser, studentId, navigate, loadNotifications]);
 
   const fetchAllComplaints = async () => {
     if (!currentUser) return;
@@ -1469,7 +72,6 @@ function StudentProfile() {
 
       if (response.ok) {
         setComplaints(result.payload || []);
-        // Check if there's any open complaint
         const openComplaint = result.payload?.find(complaint => 
           complaint.status !== 'Completed' && complaint.status !== 'verified'
         );
@@ -1485,11 +87,9 @@ function StudentProfile() {
     }
   };
 
-  // Add Update Profile function from first code
   const updateProfile = async (e) => {
     e.preventDefault();
     
-    // Basic validation
     if (!profileData.firstName.trim() || !profileData.lastName.trim()) {
       setMessage('First name and last name are required');
       return;
@@ -1514,8 +114,6 @@ function StudentProfile() {
       if (response.ok) {
         setMessage('Profile updated successfully!');
         setIsEditingProfile(false);
-        // Update the current user context if needed
-        // updateUserContext(result.payload);
       } else {
         setMessage(result.message || 'Failed to update profile');
       }
@@ -1527,7 +125,6 @@ function StudentProfile() {
     }
   };
 
-  // Add Delete Profile function from first code
   const deleteProfile = async () => {
     if (!window.confirm('Are you sure you want to delete your profile? This action cannot be undone.')) {
       return;
@@ -1549,7 +146,7 @@ function StudentProfile() {
 
       if (response.ok) {
         setMessage('Profile deleted successfully!');
-        localStorage.removeItem('authToken');
+        logout();
         setTimeout(() => {
           navigate('/');
         }, 2000);
@@ -1564,11 +161,9 @@ function StudentProfile() {
     }
   };
 
-  // Add Update Complaint function from first code
   const updateComplaint = async (e) => {
     e.preventDefault();
     
-    // Validation
     if (!complaintData.title.trim() || !complaintData.description.trim() || !complaintData.category) {
       setMessage('Please fill in all required fields');
       return;
@@ -1593,7 +188,7 @@ function StudentProfile() {
       if (response.ok) {
         setMessage('Complaint updated successfully!');
         setEditingComplaintId(null);
-        fetchAllComplaints(); // Refresh complaints list
+        fetchAllComplaints();
         setComplaintData({ title: '', description: '', category: '' });
       } else {
         setMessage(result.message || 'Failed to update complaint');
@@ -1636,7 +231,6 @@ function StudentProfile() {
     }
   };
 
-  // Enhanced Delete Complaint function from first code
   const handleDeleteComplaint = async (complaintId) => {
     if (!window.confirm('Are you sure you want to delete this complaint? This action cannot be undone.')) {
       return;
@@ -1670,7 +264,6 @@ function StudentProfile() {
     }
   };
 
-  // Add helper functions from first code
   const startEditingComplaint = (complaint) => {
     setEditingComplaintId(complaint._id);
     setComplaintData({
@@ -1685,23 +278,13 @@ function StudentProfile() {
     setComplaintData({ title: '', description: '', category: '' });
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/signup');
-  };
-
   const getStatusBadgeClass = (status) => {
     switch (status?.toLowerCase()) {
-      case 'completed':
-        return 'badge bg-success';
-      case 'in progress':
-        return 'badge bg-warning text-dark';
-      case 'verified':
-        return 'badge bg-info';
-      case 'rejected':
-        return 'badge bg-danger';
-      default:
-        return 'badge bg-secondary';
+      case 'completed': return 'badge bg-success';
+      case 'in progress': return 'badge bg-warning text-dark';
+      case 'verified': return 'badge bg-info';
+      case 'rejected': return 'badge bg-danger';
+      default: return 'badge bg-secondary';
     }
   };
 
@@ -1721,7 +304,6 @@ function StudentProfile() {
     return !lockedStatuses.includes(status);
   };
 
-  // Auto-hide message after 5 seconds
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => {
@@ -1733,18 +315,24 @@ function StudentProfile() {
 
   if (!currentUser) {
     return (
-      <div className="container">
-        <div className="row justify-content-center mt-5">
-          <div className="col-md-6">
-            <div className="alert alert-warning text-center">
-              <h4>Access Denied</h4>
-              <p>Please log in to view your profile.</p>
-              <button 
-                className="btn btn-primary"
-                onClick={() => navigate('/signup')}
-              >
-                Go to Login
-              </button>
+      <div className="min-vh-100 d-flex align-items-center justify-content-center" style={{background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)'}}>
+        <div className="container">
+          <div className="row justify-content-center">
+            <div className="col-md-6">
+              <div className="card border-0 shadow-lg" style={{borderRadius: '24px'}}>
+                <div className="card-body p-5 text-center">
+                  <i className="fas fa-exclamation-triangle text-warning mb-4" style={{fontSize: '64px'}}></i>
+                  <h4 className="fw-bold mb-3">Access Denied</h4>
+                  <p className="text-muted mb-4">Please log in to view your profile.</p>
+                  <button 
+                    className="btn btn-primary px-5 py-3"
+                    onClick={() => navigate('/signup')}
+                    style={{borderRadius: '12px'}}
+                  >
+                    Go to Login
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1752,646 +340,528 @@ function StudentProfile() {
     );
   }
 
+  const unreadWardenNotifications = (notifications || []).filter(
+    notification => !notification.isRead && notification.senderRole === 'warden'
+  ).length;
+
   return (
-    <div className="container-fluid">
-      {/* Header Section */}
-      <div className="row">
-        <div className="col-12">
-          <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-            <div className="container">
-              <span className="navbar-brand mb-0 h1">
-                <i className="fas fa-user-graduate me-2"></i>
-                Student Portal
-              </span>
+    <>
+      <style>{`
+        .glass-card {
+          background: rgba(255, 255, 255, 0.98);
+          backdrop-filter: blur(20px);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .nav-pills .nav-link {
+          border-radius: 12px;
+          padding: 12px 24px;
+          font-weight: 500;
+          transition: all 0.3s ease;
+        }
+        .nav-pills .nav-link.active {
+          background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+          box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+        }
+        .complaint-card {
+          border-radius: 16px;
+          border: 2px solid #e9ecef;
+          transition: all 0.3s ease;
+        }
+        .complaint-card:hover {
+          border-color: #0d6efd;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+      `}</style>
+
+      <div className="min-vh-100" style={{background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)'}}>
+        
+        {/* Header */}
+        <div className="bg-white border-bottom sticky-top">
+          <div className="container py-3">
+            <div className="d-flex justify-content-between align-items-center">
+              <div className="d-flex align-items-center gap-3">
+                <div className="bg-primary rounded-3 d-flex align-items-center justify-content-center" style={{width: '48px', height: '48px'}}>
+                  <i className="fas fa-user-graduate text-white fs-4"></i>
+                </div>
+                <div>
+                  <h5 className="mb-0 fw-bold">Student Portal</h5>
+                  <small className="text-muted">{currentUser.firstName} {currentUser.lastName}</small>
+                </div>
+              </div>
               
-              {/* Navigation Buttons */}
-              <div className="navbar-nav ms-auto d-flex flex-row gap-2">
-                <button
-                  className={`btn ${activeTab === 'complaints' ? 'btn-light' : 'btn-outline-light'} me-2`}
-                  onClick={() => {
-                    setActiveTab('complaints');
-                    fetchAllComplaints();
-                  }}
+              <div className="d-flex flex-wrap gap-2 justify-content-end">
+                <Link
+                  to="/"
+                  className="btn btn-outline-secondary"
+                  style={{ borderRadius: '8px' }}
                 >
-                  <i className="fas fa-list me-1"></i>
-                  View All Complaints
-                </button>
-                
-                {/* Conditional Post Complaint Button */}
-                {hasOpenComplaint ? (
-                  <button 
-                    className="btn btn-secondary me-2" 
-                    disabled
-                    title="You have an unresolved complaint. Please resolve it first."
-                  >
-                    <i className="fas fa-lock me-1"></i>
-                    Post Complaint (Locked)
-                  </button>
-                ) : (
-                  <Link 
-                    to={`/student-profile/${studentId}/complaint-form`} 
-                    className="btn btn-success me-2"
-                  >
-                    <i className="fas fa-plus me-1"></i>
-                    Post Complaint
-                  </Link>
-                )}
-                
-                <button
-                  className={`btn ${activeTab === 'profile' ? 'btn-light' : 'btn-outline-light'} me-2`}
-                  onClick={() => setActiveTab('profile')}
+                  <i className="fas fa-home me-1"></i>
+                  Home
+                </Link>
+                <Link 
+                  to={`/student-profile/${studentId}/notifications`}
+                  className="btn btn-outline-primary position-relative"
+                  style={{borderRadius: '8px'}}
                 >
-                  <i className="fas fa-user me-1"></i>
-                  Profile
-                </button>
-                
-                <button 
-                  className="btn btn-outline-light"
-                  onClick={handleLogout}
+                  <i className="fas fa-bell me-2"></i>
+                  Notifications
+                  {unreadWardenNotifications > 0 && (
+                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                      {unreadWardenNotifications}
+                      <span className="visually-hidden">unread warden notifications</span>
+                    </span>
+                  )}
+                </Link>
+                <Link
+                  to="/signout"
+                  className="btn btn-outline-danger"
+                  style={{ borderRadius: '8px' }}
                 >
-                  <i className="fas fa-sign-out-alt me-1"></i>
-                  Logout
-                </button>
-              </div>
-            </div>
-          </nav>
-        </div>
-      </div>
-
-      {/* Welcome Section */}
-      <div className="row mt-3">
-        <div className="col-12">
-          <div className="bg-light p-3 rounded shadow-sm">
-            <div className="container">
-              <h2 className="text-primary mb-1">
-                Welcome, {currentUser.firstName} {currentUser.lastName}!
-              </h2>
-              <p className="text-muted mb-0">
-                <i className="fas fa-id-card me-1"></i>
-                Roll No: <strong>{currentUser.Id}</strong> | 
-                <i className="fas fa-envelope ms-2 me-1"></i>
-                {currentUser.email} | 
-                <i className="fas fa-bed ms-2 me-1"></i>
-                Room: <strong>{currentUser.roomNumber || 'Not assigned'}</strong> | 
-                <i className="fas fa-building ms-2 me-1"></i>
-                Block: <strong>{currentUser.block || 'Not assigned'}</strong>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Alert for Open Complaints */}
-      {hasOpenComplaint && (
-        <div className="row mt-3">
-          <div className="col-12">
-            <div className="container">
-              <div className="alert alert-warning d-flex align-items-center" role="alert">
-                <i className="fas fa-exclamation-triangle me-2"></i>
-                <strong>Notice:</strong> You have an unresolved complaint. Please resolve your previous complaint before raising a new one.
+                  <i className="fas fa-sign-out-alt me-2"></i>
+                  Sign Out
+                </Link>
               </div>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Message Display */}
-      {message && (
-        <div className="row mt-3">
-          <div className="col-12">
-            <div className="container">
-              <div className={`alert ${message.includes('successfully') ? 'alert-success' : 'alert-danger'} alert-dismissible fade show`}>
-                <div className="d-flex align-items-center">
-                  <i className={`fas ${message.includes('successfully') ? 'fa-check-circle' : 'fa-exclamation-triangle'} me-2`}></i>
-                  {message}
-                  <button 
-                    type="button" 
-                    className="btn-close ms-auto" 
-                    onClick={() => setMessage('')}
-                    aria-label="Close"
-                  ></button>
+        {/* Welcome Banner */}
+        <div className="bg-primary bg-gradient text-white py-4">
+          <div className="container">
+            <div className="row align-items-center">
+              <div className="col-md-8">
+                <h2 className="fw-bold mb-2">Welcome back, {currentUser.firstName}!</h2>
+                <p className="mb-0 opacity-90">
+                  <i className="fas fa-id-card me-2"></i>
+                  Roll No: <strong>{currentUser.Id}</strong> • 
+                  <i className="fas fa-envelope ms-3 me-2"></i>
+                  {currentUser.email}
+                </p>
+              </div>
+              <div className="col-md-4 text-end">
+                <div className="d-inline-flex flex-column align-items-end">
+                  <div className="text-white-50 small mb-1">Your Location</div>
+                  <div className="fw-semibold">
+                    <i className="fas fa-building me-2"></i>
+                    Block {currentUser.block || 'N/A'}, Room {currentUser.roomNumber || 'N/A'}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Main Content */}
-      <div className="row mt-4">
-        <div className="col-12">
-          <div className="container">
+        {/* Messages */}
+        {(message || error) && (
+          <div className="container mt-4">
+            <div className={`alert ${message ? 'alert-success' : 'alert-danger'} border-0 alert-dismissible fade show`} style={{borderRadius: '12px'}}>
+              <i className={`fas ${message ? 'fa-check-circle' : 'fa-exclamation-triangle'} me-2`}></i>
+              {message || error}
+              <button type="button" className="btn-close" onClick={() => { setMessage(''); setError(''); }}></button>
+            </div>
+          </div>
+        )}
+
+        {/* Complaint Alert */}
+        {hasOpenComplaint && (
+          <div className="container mt-4">
+            <div className="alert alert-warning border-0" style={{borderRadius: '12px'}}>
+              <div className="d-flex align-items-center">
+                <i className="fas fa-info-circle fs-4 me-3"></i>
+                <div>
+                  <strong>Notice:</strong> You have an unresolved complaint. Please resolve your previous complaint before raising a new one.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content */}
+        <div className="container py-4">
+          <div className="row g-4">
             
-            {/* Complaints Tab */}
-            {activeTab === 'complaints' && (
-              <div>
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                  <h3 className="text-dark">
-                    <i className="fas fa-clipboard-list me-2"></i>
-                    My Complaints
-                  </h3>
-                  <div className="d-flex gap-2">
+            {/* Sidebar */}
+            <div className="col-lg-3">
+              <div className="glass-card p-4" style={{borderRadius: '16px', position: 'sticky', top: '100px'}}>
+                <ul className="nav nav-pills flex-column gap-2">
+                  <li className="nav-item">
+                    <button
+                      className={`nav-link w-100 text-start ${activeTab === 'complaints' ? 'active' : 'text-dark'}`}
+                      onClick={() => setActiveTab('complaints')}
+                    >
+                      <i className="fas fa-clipboard-list me-2"></i>
+                      My Complaints
+                    </button>
+                  </li>
+                  <li className="nav-item">
+                    {hasOpenComplaint ? (
+                      <button
+                        className="nav-link w-100 text-start text-muted"
+                        disabled
+                        title="Resolve your pending complaint first"
+                      >
+                        <i className="fas fa-lock me-2"></i>
+                        New Complaint
+                      </button>
+                    ) : (
+                      <Link
+                        to={`/student-profile/${studentId}/complaint-form`}
+                        className="nav-link w-100 text-start text-dark"
+                      >
+                        <i className="fas fa-plus me-2"></i>
+                        New Complaint
+                      </Link>
+                    )}
+                  </li>
+                  <li className="nav-item">
+                    <button
+                      className={`nav-link w-100 text-start ${activeTab === 'profile' ? 'active' : 'text-dark'}`}
+                      onClick={() => setActiveTab('profile')}
+                    >
+                      <i className="fas fa-user me-2"></i>
+                      My Profile
+                    </button>
+                  </li>
+                </ul>
+
+                <hr className="my-4" />
+
+                {/* Quick Stats */}
+                <div>
+                  <h6 className="fw-bold mb-3">Quick Stats</h6>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span className="text-muted small">Total</span>
+                    <span className="badge bg-primary">{complaints.length}</span>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span className="text-muted small">Completed</span>
+                    <span className="badge bg-success">
+                      {complaints.filter(c => c.status?.toLowerCase() === 'completed').length}
+                    </span>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span className="text-muted small">In Progress</span>
+                    <span className="badge bg-warning">
+                      {complaints.filter(c => c.status?.toLowerCase() === 'in progress').length}
+                    </span>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span className="text-muted small">Pending</span>
+                    <span className="badge bg-secondary">
+                      {complaints.filter(c => !c.status || c.status?.toLowerCase() === 'not started').length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Content Area */}
+            <div className="col-lg-9">
+              
+              {/* Complaints Tab */}
+              {activeTab === 'complaints' && (
+                <div>
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h4 className="fw-bold mb-0">
+                      <i className="fas fa-clipboard-list me-2 text-primary"></i>
+                      My Complaints
+                    </h4>
                     <button 
-                      className="btn btn-outline-primary btn-sm"
+                      className="btn btn-outline-primary"
                       onClick={fetchAllComplaints}
                       disabled={loading}
+                      style={{borderRadius: '8px'}}
                     >
-                      <i className="fas fa-sync-alt me-1"></i>
+                      <i className="fas fa-sync-alt me-2"></i>
                       {loading ? 'Refreshing...' : 'Refresh'}
                     </button>
                   </div>
-                </div>
 
-                {/* Error Message */}
-                {error && (
-                  <div className="alert alert-danger" role="alert">
-                    <i className="fas fa-exclamation-triangle me-2"></i>
-                    {error}
-                    <button 
-                      type="button" 
-                      className="btn-close" 
-                      onClick={() => setError('')}
-                      aria-label="Close"
-                    ></button>
-                  </div>
-                )}
-
-                {/* Loading State */}
-                {loading && (
-                  <div className="text-center py-5">
-                    <div className="spinner-border text-primary" role="status">
-                      <span className="visually-hidden">Loading...</span>
-                    </div>
-                    <p className="mt-2 text-muted">Loading your complaints...</p>
-                  </div>
-                )}
-
-                {/* Complaints List */}
-                {!loading && !error && (
-                  <div>
-                    {complaints.length === 0 ? (
-                      <div className="text-center py-5">
-                        <div className="card border-0 bg-light">
-                          <div className="card-body">
-                            <i className="fas fa-clipboard fa-3x text-muted mb-3"></i>
-                            <h5 className="text-muted">No Complaints Found</h5>
-                            <p className="text-muted">You haven't filed any complaints yet.</p>
-                            <Link to={`/student-profile/${studentId}/complaint-form`} className="btn btn-primary">
-                              <i className="fas fa-plus me-1"></i>
-                              File Your First Complaint
-                            </Link>
-                          </div>
-                        </div>
+                  {loading && (
+                    <div className="text-center py-5">
+                      <div className="spinner-border text-primary mb-3" style={{width: '3rem', height: '3rem'}}>
                       </div>
-                    ) : (
-                      <div className="row">
-                        {complaints.map((complaint, index) => (
-                          <div key={complaint._id || index} className="col-lg-6 col-md-6 col-sm-12 mb-4">
-                            <div className="card h-100 shadow-sm border-start border-4 border-primary">
-                              <div className="card-header bg-white d-flex justify-content-between align-items-center">
-                                <h6 className="mb-0 text-primary fw-bold">
-                                  {complaint.title || 'No Title'}
-                                </h6>
-                                <span className={getStatusBadgeClass(complaint.status)}>
-                                  {complaint.status || 'Not Started'}
-                                </span>
-                              </div>
-                              <div className="card-body">
-                                {editingComplaintId === complaint._id ? (
-                                  // Edit Form
-                                  <form onSubmit={updateComplaint}>
-                                    <div className="mb-3">
-                                      <label className="form-label">Title *</label>
-                                      <input 
-                                        type="text"
-                                        className="form-control"
-                                        value={complaintData.title}
-                                        onChange={(e) => setComplaintData({...complaintData, title: e.target.value})}
-                                        maxLength="100"
-                                        required
-                                      />
-                                    </div>
-                                    
-                                    <div className="mb-3">
-                                      <label className="form-label">Description *</label>
-                                      <textarea 
-                                        className="form-control"
-                                        rows="3"
-                                        value={complaintData.description}
-                                        onChange={(e) => setComplaintData({...complaintData, description: e.target.value})}
-                                        maxLength="500"
-                                        required
-                                      />
-                                    </div>
-                                    
-                                    <div className="mb-3">
-                                      <label className="form-label">Category *</label>
-                                      <select 
-                                        className="form-select"
-                                        value={complaintData.category}
-                                        onChange={(e) => setComplaintData({...complaintData, category: e.target.value})}
-                                        required
-                                      >
-                                        <option value="">Select a category</option>
-                                        <option value="Plumbing">Plumbing</option>
-                                        <option value="Electricity">Electricity</option>
-                                        <option value="Cleaning">Cleaning</option>
-                                        <option value="Furniture">Furniture</option>
-                                        <option value="WiFi">WiFi</option>
-                                        <option value="Food">Food</option>
-                                        <option value="Security">Security</option>
-                                        <option value="Other">Other</option>
-                                      </select>
-                                    </div>
-                                    
-                                    <div className="d-flex gap-2">
-                                      <button 
-                                        type="submit"
-                                        className="btn btn-success btn-sm"
-                                        disabled={actionLoading === complaint._id}
-                                      >
-                                        {actionLoading === complaint._id ? (
-                                          <>
-                                            <span className="spinner-border spinner-border-sm me-1"></span>
-                                            Saving...
-                                          </>
-                                        ) : (
-                                          <>
-                                            <i className="fas fa-save me-1"></i>
-                                            Save
-                                          </>
-                                        )}
-                                      </button>
-                                      <button 
-                                        type="button"
-                                        className="btn btn-secondary btn-sm"
-                                        onClick={cancelEditingComplaint}
-                                      >
-                                        <i className="fas fa-times me-1"></i>
-                                        Cancel
-                                      </button>
-                                    </div>
-                                  </form>
-                                ) : (
-                                  // Display Mode
-                                  <>
-                                    <p className="card-text text-muted">
-                                      <strong>Description:</strong> {complaint.description || 'No description available'}
-                                    </p>
-                                    <div className="row">
-                                      <div className="col-6">
-                                        <small className="text-muted">
-                                          <i className="fas fa-tag me-1"></i>
-                                          <strong>Category:</strong> {complaint.category || 'N/A'}
-                                        </small>
-                                      </div>
-                                      <div className="col-6">
-                                        <small className="text-muted">
-                                          <i className="fas fa-door-open me-1"></i>
-                                          <strong>Room:</strong> {complaint.roomno || 'N/A'}
-                                        </small>
-                                      </div>
-                                    </div>
-                                    <div className="row mt-2">
-                                      <div className="col-6">
-                                        <small className="text-muted">
-                                          <i className="fas fa-building me-1"></i>
-                                          <strong>Block:</strong> {complaint.block || 'N/A'}
-                                        </small>
-                                      </div>
-                                      <div className="col-6">
-                                        <small className="text-muted">
-                                          <i className="fas fa-calendar me-1"></i>
-                                          <strong>Created:</strong> {formatDate(complaint.createdAt)}
-                                        </small>
-                                      </div>
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                              
-                              {/* Action Buttons - Only show when not editing */}
-                              {editingComplaintId !== complaint._id && (
-                                <div className="card-footer bg-white border-top">
-                                  <div className="d-flex justify-content-between align-items-center">
-                                    <small className="text-muted">
-                                      <i className="fas fa-clock me-1"></i>
-                                      Updated: {formatDate(complaint.updatedAt) || 'Never'}
-                                    </small>
-                                    
-                                    <div className="btn-group" role="group">
-                                      {/* Complete Button - Only show if not completed */}
-                                      {complaint.status !== 'Completed' && complaint.status !== 'verified' && (
-                                        <button
-                                          className="btn btn-success btn-sm"
-                                          onClick={() => handleCompleteComplaint(complaint._id)}
-                                          disabled={actionLoading === complaint._id}
-                                          title="Mark as completed"
-                                        >
-                                          {actionLoading === complaint._id ? (
-                                            <span className="spinner-border spinner-border-sm" role="status"></span>
-                                          ) : (
-                                            <i className="fas fa-check"></i>
-                                          )}
-                                        </button>
-                                      )}
-                                      
-                                      {/* Edit Button - Only show if complaint can be edited */}
-                                      {canEditComplaint(complaint.status) && (
-                                        <button
-                                          className="btn btn-warning btn-sm"
-                                          onClick={() => startEditingComplaint(complaint)}
-                                          title="Edit complaint"
-                                        >
-                                          <i className="fas fa-edit"></i>
-                                        </button>
-                                      )}
-                                      
-                                      {/* Delete Button */}
-                                      <button
-                                        className="btn btn-danger btn-sm"
-                                        onClick={() => handleDeleteComplaint(complaint._id)}
-                                        disabled={actionLoading === complaint._id}
-                                        title="Delete complaint"
-                                      >
-                                        {actionLoading === complaint._id ? (
-                                          <span className="spinner-border spinner-border-sm" role="status"></span>
-                                        ) : (
-                                          <i className="fas fa-trash"></i>
-                                        )}
-                                      </button>
+                      <p className="text-muted">Loading your complaints...</p>
+                    </div>
+                  )}
+
+                  {!loading && complaints.length === 0 && (
+                    <div className="glass-card p-5 text-center" style={{borderRadius: '16px'}}>
+                      <i className="fas fa-clipboard fa-3x text-muted mb-3"></i>
+                      <h5 className="fw-bold mb-2">No Complaints Found</h5>
+                      <p className="text-muted mb-4">You haven't filed any complaints yet.</p>
+                      <Link to={`/student-profile/${studentId}/complaint-form`} className="btn btn-primary px-4" style={{borderRadius: '12px'}}>
+                        <i className="fas fa-plus me-2"></i>
+                        File Your First Complaint
+                      </Link>
+                    </div>
+                  )}
+
+                  {!loading && complaints.length > 0 && (
+                    <div className="row g-4">
+                      {complaints.map((complaint) => (
+                        <div key={complaint._id} className="col-12">
+                          <div className="complaint-card bg-white p-4">
+                            {editingComplaintId === complaint._id ? (
+                              <form onSubmit={updateComplaint}>
+                                <div className="mb-3">
+                                  <label className="form-label fw-semibold">Title</label>
+                                  <input 
+                                    type="text"
+                                    className="form-control"
+                                    value={complaintData.title}
+                                    onChange={(e) => setComplaintData({...complaintData, title: e.target.value})}
+                                    required
+                                    style={{borderRadius: '8px'}}
+                                  />
+                                </div>
+                                <div className="mb-3">
+                                  <label className="form-label fw-semibold">Description</label>
+                                  <textarea 
+                                    className="form-control"
+                                    rows="3"
+                                    value={complaintData.description}
+                                    onChange={(e) => setComplaintData({...complaintData, description: e.target.value})}
+                                    required
+                                    style={{borderRadius: '8px'}}
+                                  />
+                                </div>
+                                <div className="mb-3">
+                                  <label className="form-label fw-semibold">Category</label>
+                                  <select 
+                                    className="form-select"
+                                    value={complaintData.category}
+                                    onChange={(e) => setComplaintData({...complaintData, category: e.target.value})}
+                                    required
+                                    style={{borderRadius: '8px'}}
+                                  >
+                                    <option value="">Select</option>
+                                    <option value="Plumbing">Plumbing</option>
+                                    <option value="Electricity">Electricity</option>
+                                    <option value="Cleaning">Cleaning</option>
+                                    <option value="Furniture">Furniture</option>
+                                    <option value="WiFi">WiFi</option>
+                                    <option value="Other">Other</option>
+                                  </select>
+                                </div>
+                                <div className="d-flex gap-2">
+                                  <button type="submit" className="btn btn-success" disabled={actionLoading === complaint._id} style={{borderRadius: '8px'}}>
+                                    <i className="fas fa-save me-2"></i>
+                                    Save
+                                  </button>
+                                  <button type="button" className="btn btn-secondary" onClick={cancelEditingComplaint} style={{borderRadius: '8px'}}>
+                                    Cancel
+                                  </button>
+                                </div>
+                              </form>
+                            ) : (
+                              <>
+                                <div className="d-flex justify-content-between align-items-start mb-3">
+                                  <div className="flex-grow-1">
+                                    <h5 className="fw-bold mb-2 text-primary">{complaint.title || 'No Title'}</h5>
+                                    <p className="text-muted mb-3">{complaint.description || 'No description'}</p>
+                                    <div className="d-flex flex-wrap gap-3 small">
+                                      <span><i className="fas fa-tag text-primary me-1"></i> {complaint.category}</span>
+                                      <span><i className="fas fa-building text-primary me-1"></i> Block {complaint.block}</span>
+                                      <span><i className="fas fa-door-open text-primary me-1"></i> Room {complaint.roomno}</span>
+                                      <span><i className="fas fa-calendar text-primary me-1"></i> {formatDate(complaint.createdAt)}</span>
                                     </div>
                                   </div>
+                                  <span className={getStatusBadgeClass(complaint.status)}>
+                                    {complaint.status || 'Pending'}
+                                  </span>
                                 </div>
-                              )}
+                                
+                                {editingComplaintId !== complaint._id && (
+                                  <div className="d-flex gap-2 border-top pt-3">
+                                    {complaint.status !== 'Completed' && complaint.status !== 'verified' && (
+                                      <button
+                                        className="btn btn-sm btn-success"
+                                        onClick={() => handleCompleteComplaint(complaint._id)}
+                                        disabled={actionLoading === complaint._id}
+                                        style={{borderRadius: '8px'}}
+                                      >
+                                        <i className="fas fa-check me-1"></i>
+                                        Complete
+                                      </button>
+                                    )}
+                                    {canEditComplaint(complaint.status) && (
+                                      <button
+                                        className="btn btn-sm btn-warning"
+                                        onClick={() => startEditingComplaint(complaint)}
+                                        style={{borderRadius: '8px'}}
+                                      >
+                                        <i className="fas fa-edit me-1"></i>
+                                        Edit
+                                      </button>
+                                    )}
+                                    <button
+                                      className="btn btn-sm btn-danger"
+                                      onClick={() => handleDeleteComplaint(complaint._id)}
+                                      disabled={actionLoading === complaint._id}
+                                      style={{borderRadius: '8px'}}
+                                    >
+                                      <i className="fas fa-trash me-1"></i>
+                                      Delete
+                                    </button>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Profile Tab */}
+              {activeTab === 'profile' && (
+                <div>
+                  <h4 className="fw-bold mb-4">
+                    <i className="fas fa-user me-2 text-primary"></i>
+                    My Profile
+                  </h4>
+                  
+                  <div className="glass-card p-4" style={{borderRadius: '16px'}}>
+                    {!isEditingProfile ? (
+                      <>
+                        <div className="row g-3 mb-4">
+                          <div className="col-md-6">
+                            <div className="d-flex align-items-center p-3 bg-light" style={{borderRadius: '12px'}}>
+                              <i className="fas fa-user text-primary fs-4 me-3"></i>
+                              <div>
+                                <small className="text-muted d-block">Full Name</small>
+                                <strong>{currentUser.firstName} {currentUser.lastName}</strong>
+                              </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
+                          <div className="col-md-6">
+                            <div className="d-flex align-items-center p-3 bg-light" style={{borderRadius: '12px'}}>
+                              <i className="fas fa-envelope text-primary fs-4 me-3"></i>
+                              <div>
+                                <small className="text-muted d-block">Email</small>
+                                <strong>{currentUser.email}</strong>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="col-md-6">
+                            <div className="d-flex align-items-center p-3 bg-light" style={{borderRadius: '12px'}}>
+                              <i className="fas fa-id-card text-primary fs-4 me-3"></i>
+                              <div>
+                                <small className="text-muted d-block">Roll Number</small>
+                                <strong>{currentUser.Id}</strong>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="col-md-6">
+                            <div className="d-flex align-items-center p-3 bg-light" style={{borderRadius: '12px'}}>
+                              <i className="fas fa-phone text-primary fs-4 me-3"></i>
+                              <div>
+                                <small className="text-muted d-block">Phone</small>
+                                <strong>{currentUser.phone || 'Not provided'}</strong>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="d-flex gap-2">
+                          <button 
+                            className="btn btn-primary"
+                            onClick={() => setIsEditingProfile(true)}
+                            style={{borderRadius: '8px'}}
+                          >
+                            <i className="fas fa-edit me-2"></i>
+                            Edit Profile
+                          </button>
+                          <button 
+                            className="btn btn-outline-danger"
+                            onClick={deleteProfile}
+                            disabled={actionLoading === 'profile'}
+                            style={{borderRadius: '8px'}}
+                          >
+                            <i className="fas fa-trash me-2"></i>
+                            Delete Profile
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <form onSubmit={updateProfile}>
+                        <div className="row g-3">
+                          <div className="col-md-6">
+                            <label className="form-label fw-semibold">First Name</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={profileData.firstName}
+                              onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
+                              required
+                              style={{borderRadius: '8px'}}
+                            />
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label fw-semibold">Last Name</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={profileData.lastName}
+                              onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
+                              required
+                              style={{borderRadius: '8px'}}
+                            />
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label fw-semibold">Phone</label>
+                            <input
+                              type="tel"
+                              className="form-control"
+                              value={profileData.phone}
+                              onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                              style={{borderRadius: '8px'}}
+                            />
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label fw-semibold">Room Number</label>
+                            <input
+                              type="number"
+                              className="form-control"
+                              value={profileData.roomNumber}
+                              onChange={(e) => setProfileData({...profileData, roomNumber: e.target.value})}
+                              style={{borderRadius: '8px'}}
+                            />
+                          </div>
+                        </div>
+                        <div className="d-flex gap-2 mt-4">
+                          <button
+                            type="submit"
+                            className="btn btn-success"
+                            disabled={actionLoading === 'profile'}
+                            style={{borderRadius: '8px'}}
+                          >
+                            <i className="fas fa-save me-2"></i>
+                            Save Changes
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={() => setIsEditingProfile(false)}
+                            style={{borderRadius: '8px'}}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
                     )}
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Profile Tab */}
-            {activeTab === 'profile' && (
-              <div>
-                <h3 className="text-dark mb-4">
-                  <i className="fas fa-user me-2"></i>
-                  Profile Information
-                </h3>
-                <div className="row">
-                  <div className="col-md-8">
-                    <div className="card shadow-sm">
-                      <div className="card-header bg-primary text-white">
-                        <h5 className="mb-0">
-                          <i className="fas fa-user-circle me-2"></i>
-                          Personal Details
-                        </h5>
-                      </div>
-                      <div className="card-body">
-                        {!isEditingProfile ? (
-                          // Display Mode
-                          <>
-                            <div className="row mb-3">
-                              <div className="col-sm-4"><strong>Full Name:</strong></div>
-                              <div className="col-sm-8">{currentUser.firstName} {currentUser.lastName}</div>
-                            </div>
-                            <div className="row mb-3">
-                              <div className="col-sm-4"><strong>Roll Number:</strong></div>
-                              <div className="col-sm-8">{currentUser.Id}</div>
-                            </div>
-                            <div className="row mb-3">
-                              <div className="col-sm-4"><strong>Email:</strong></div>
-                              <div className="col-sm-8">{currentUser.email}</div>
-                            </div>
-                            <div className="row mb-3">
-                              <div className="col-sm-4"><strong>Phone:</strong></div>
-                              <div className="col-sm-8">{currentUser.phone || 'Not provided'}</div>
-                            </div>
-                            <div className="row mb-3">
-                              <div className="col-sm-4"><strong>Room Number:</strong></div>
-                              <div className="col-sm-8">{currentUser.roomNumber || 'Not assigned'}</div>
-                            </div>
-                            <div className="row mb-3">
-                              <div className="col-sm-4"><strong>Block:</strong></div>
-                              <div className="col-sm-8">{currentUser.block || 'Not assigned'}</div>
-                            </div>
-                            <div className="row mb-3">
-                              <div className="col-sm-4"><strong>Role:</strong></div>
-                              <div className="col-sm-8">
-                                <span className="badge bg-info">{currentUser.role || 'Student'}</span>
-                              </div>
-                            </div>
-                          </>
-                        ) : (
-                          // Edit Mode
-                          <form onSubmit={updateProfile}>
-                            <div className="row mb-3">
-                              <div className="col-md-6">
-                                <label className="form-label">First Name *</label>
-                                <input 
-                                  type="text"
-                                  className="form-control"
-                                  value={profileData.firstName}
-                                  onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
-                                  required
-                                />
-                              </div>
-                              <div className="col-md-6">
-                                <label className="form-label">Last Name *</label>
-                                <input 
-                                  type="text"
-                                  className="form-control"
-                                  value={profileData.lastName}
-                                  onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            
-                            <div className="mb-3">
-                              <label className="form-label">Phone Number</label>
-                                                              <input 
-                                type="tel"
-                                className="form-control"
-                                value={profileData.phone}
-                                onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-                                placeholder="e.g., +91 9876543210"
-                              />
-                            </div>
-                            
-                            <div className="row mb-3">
-                              <div className="col-md-6">
-                                <label className="form-label">Room Number</label>
-                                <input 
-                                  type="number"
-                                  className="form-control"
-                                  value={profileData.roomNumber}
-                                  onChange={(e) => setProfileData({...profileData, roomNumber: e.target.value})}
-                                  min="1"
-                                />
-                              </div>
-                              <div className="col-md-6">
-                                <label className="form-label">Block</label>
-                                <input 
-                                  type="text"
-                                  className="form-control"
-                                  value={profileData.block}
-                                  onChange={(e) => setProfileData({...profileData, block: e.target.value})}
-                                  placeholder="e.g., A, B, C"
-                                  maxLength="10"
-                                />
-                              </div>
-                            </div>
-                            
-                            <div className="row mb-3">
-                              <div className="col-md-6">
-                                <label className="form-label">Year</label>
-                                <select 
-                                  className="form-select" 
-                                  value={profileData.year}
-                                  onChange={(e) => setProfileData({...profileData, year: e.target.value})}
-                                >
-                                  <option value="">Select Year</option>
-                                  <option value="1st Year">1st Year</option>
-                                  <option value="2nd Year">2nd Year</option>
-                                  <option value="3rd Year">3rd Year</option>
-                                  <option value="4th Year">4th Year</option>
-                                </select>
-                              </div>
-                              <div className="col-md-6">
-                                <label className="form-label">Branch</label>
-                                <input 
-                                  type="text"
-                                  className="form-control"
-                                  value={profileData.branch}
-                                  onChange={(e) => setProfileData({...profileData, branch: e.target.value})}
-                                  placeholder="e.g., Computer Science"
-                                />
-                              </div>
-                            </div>
-                            
-                            <div className="d-flex gap-2">
-                              <button 
-                                type="submit"
-                                className="btn btn-success"
-                                disabled={actionLoading === 'profile'}
-                              >
-                                {actionLoading === 'profile' ? (
-                                  <>
-                                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                                    Saving...
-                                  </>
-                                ) : (
-                                  <>
-                                    <i className="fas fa-save me-1"></i>
-                                    Save Changes
-                                  </>
-                                )}
-                              </button>
-                              <button 
-                                type="button"
-                                className="btn btn-secondary"
-                                onClick={() => {
-                                  setIsEditingProfile(false);
-                                  setProfileData({
-                                    firstName: currentUser.firstName || '',
-                                    lastName: currentUser.lastName || '',
-                                    phone: currentUser.phone || '',
-                                    roomNumber: currentUser.roomNumber || '',
-                                    block: currentUser.block || '',
-                                    year: currentUser.year || '',
-                                    branch: currentUser.branch || ''
-                                  });
-                                }}
-                              >
-                                <i className="fas fa-times me-1"></i>
-                                Cancel
-                              </button>
-                            </div>
-                          </form>
-                        )}
-                      </div>
-                      <div className="card-footer">
-                        {!isEditingProfile && (
-                          <div className="d-flex gap-2">
-                            <button 
-                              className="btn btn-outline-primary"
-                              onClick={() => setIsEditingProfile(true)}
-                              disabled={actionLoading === 'profile'}
-                            >
-                              <i className="fas fa-edit me-1"></i>
-                              Edit Profile
-                            </button>
-                            <button 
-                              className="btn btn-outline-danger"
-                              onClick={deleteProfile}
-                              disabled={actionLoading === 'profile'}
-                            >
-                              <i className="fas fa-trash me-1"></i>
-                              {actionLoading === 'profile' ? 'Deleting...' : 'Delete Profile'}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className="card shadow-sm">
-                      <div className="card-header bg-info text-white">
-                        <h6 className="mb-0">
-                          <i className="fas fa-chart-pie me-2"></i>
-                          Quick Stats
-                        </h6>
-                      </div>
-                      <div className="card-body">
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                          <span>Total Complaints:</span>
-                          <span className="badge bg-primary">{complaints.length}</span>
-                        </div>
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                          <span>Completed:</span>
-                          <span className="badge bg-success">
-                            {complaints.filter(c => c.status?.toLowerCase() === 'completed').length}
-                          </span>
-                        </div>
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                          <span>In Progress:</span>
-                          <span className="badge bg-warning text-dark">
-                            {complaints.filter(c => c.status?.toLowerCase() === 'in progress').length}
-                          </span>
-                        </div>
-                        <div className="d-flex justify-content-between align-items-center">
-                          <span>Pending:</span>
-                          <span className="badge bg-secondary">
-                            {complaints.filter(c => !c.status || c.status?.toLowerCase() === 'not started').length}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              </div>
-            )}
-
+              )}
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Loading Overlay */}
-      {actionLoading && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060}}>
-          <div className="text-center text-white">
-            <div className="spinner-border spinner-border-lg mb-2" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <div>Processing...</div>
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 

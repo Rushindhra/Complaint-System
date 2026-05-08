@@ -30,7 +30,7 @@ ChartJS.register(
 function WardenProfile() {
   const { wardenId } = useParams();
   const navigate = useNavigate();
-  const { currentUser, logout } = useUser();
+  const { currentUser } = useUser();
   
   // Chart refs
   const categoryChartRef = useRef(null);
@@ -472,12 +472,6 @@ function WardenProfile() {
     }
   };
 
-  // Handle logout
-  const handleLogout = () => {
-    logout();
-    navigate('/signup');
-  };
-
   // Format date utility
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -553,9 +547,14 @@ function WardenProfile() {
                 Warden Portal
               </span>
               
-              <div className="navbar-nav ms-auto d-flex flex-row gap-2">
+              <div className="navbar-nav ms-auto d-flex flex-row flex-wrap gap-2">
+                <Link to="/" className="btn btn-outline-light btn-sm">
+                  <i className="fas fa-home me-1"></i>
+                  Home
+                </Link>
                 <button
-                  className={`btn ${activeTab === 'dashboard' ? 'btn-light' : 'btn-outline-light'} me-2`}
+                  type="button"
+                  className={`btn btn-sm ${activeTab === 'dashboard' ? 'btn-light' : 'btn-outline-light'}`}
                   onClick={() => setActiveTab('dashboard')}
                 >
                   <i className="fas fa-chart-pie me-1"></i>
@@ -564,24 +563,25 @@ function WardenProfile() {
                 
                 <Link 
                   to={`/warden-profile/${wardenId}/verify-complaints`} 
-                  className="btn btn-success me-2"
+                  className="btn btn-success btn-sm"
                 >
                   <i className="fas fa-check-circle me-1"></i>
-                  Verify Complaints
+                  Verify
                 </Link>
                 
                 <button
-                  className={`btn ${activeTab === 'profile' ? 'btn-light' : 'btn-outline-light'} me-2`}
+                  type="button"
+                  className={`btn btn-sm ${activeTab === 'profile' ? 'btn-light' : 'btn-outline-light'}`}
                   onClick={() => setActiveTab('profile')}
                 >
                   <i className="fas fa-user me-1"></i>
                   Profile
                 </button>
                 
-                <button className="btn btn-outline-light" onClick={handleLogout}>
+                <Link to="/signout" className="btn btn-outline-light btn-sm">
                   <i className="fas fa-sign-out-alt me-1"></i>
-                  Logout
-                </button>
+                  Sign Out
+                </Link>
               </div>
             </div>
           </nav>

@@ -1,14 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import 'bootstrap/dist/css/bootstrap.css';
-import App from './App.jsx'
 import Register from './common/Register.jsx';
 import WardenRegister from "./common/WardenRegister.jsx"
 import ComplaintForm from './common/ComplaintForm.jsx'
-import Header from './common/Header.jsx'
-import Footer from './common/Footer.jsx'
 import Home from './common/Home.jsx'
-import About from './common/About.jsx'
 import Signup from './common/Signup.jsx'
 import Signout from './common/Signout.jsx'
 import StudentProfile from "./common/StudentProfile.jsx"
@@ -16,7 +12,7 @@ import WardenProfile from './common/WardenProfile.jsx';
 import VerifyComplaints from './common/VerifyComplaints.jsx';
 import NotificationSystem from './common/NotificationSystem.jsx';
 import NavigationTest from './common/NavigationTest.jsx';
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import RootLayout from './components/RootLayout.jsx'
 import { UserProvider } from '../src/context/UserContext.jsx'
 

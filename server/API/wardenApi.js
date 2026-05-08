@@ -3,6 +3,21 @@ const wardenApp = exp.Router()
 const expressAsyncHandler = require('express-async-handler')
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+
+/** URL param may be MongoDB _id or employee code (e.g. WR001) */
+function wardenLookupFilter(wardenIdParam) {
+  const wardenId = String(wardenIdParam || '').trim();
+  if (!wardenId) return null;
+  if (/^[a-fA-F0-9]{24}$/.test(wardenId)) {
+    return { _id: new mongoose.Types.ObjectId(wardenId) };
+  }
+  return { employeeId: wardenId };
+}
+
+function isObjectId(value) {
+  return /^[a-fA-F0-9]{24}$/.test(String(value || '').trim());
+}
 
 // Import models
 const Warden = require('../models/warden/wardenModel')
@@ -16,6 +31,44 @@ const ComplaintStatusModel = require('../models/hosteller/complaintStatusModel')
 const verifyJWT = require('../middleware/verifytoken')
 
 wardenApp.use(exp.json())
+
+async function enrichComplaintWithStudent(complaintDoc) {
+  const complaint = complaintDoc?.toObject ? complaintDoc.toObject() : complaintDoc;
+  if (!complaint) return complaint;
+
+  const hosteller = await Hosteller.findOne({ Id: complaint.createdBy })
+    .select('_id Id email firstName lastName')
+    .lean();
+
+  return {
+    ...complaint,
+    studentId: hosteller?._id ?? null,
+    studentRollNo: hosteller?.Id ?? complaint.createdBy,
+    studentEmail: hosteller?.email ?? null,
+    studentName: hosteller
+      ? `${hosteller.firstName || ''} ${hosteller.lastName || ''}`.trim()
+      : complaint.createdBy
+  };
+}
+
+async function resolveNotificationRecipient(recipientId, recipientEmail) {
+  const query = [];
+  if (recipientId) {
+    if (isObjectId(recipientId)) {
+      query.push({ _id: new mongoose.Types.ObjectId(recipientId) });
+    }
+    query.push({ Id: String(recipientId).trim() });
+  }
+  if (recipientEmail) {
+    query.push({ email: String(recipientEmail).trim() });
+  }
+
+  if (!query.length) return null;
+
+  return Hosteller.findOne({ $or: query })
+    .select('_id email firstName lastName Id')
+    .lean();
+}
 
 // FIXED: Register endpoint
 wardenApp.post(
@@ -112,10 +165,17 @@ wardenApp.get(
   verifyJWT,
   expressAsyncHandler(async (req, res) => {
     const wardenId = req.params.wardenId;
+    const filter = wardenLookupFilter(wardenId);
+    if (!filter) {
+      return res.status(400).send({ message: "Invalid warden id" });
+    }
 
-    const warden = await Warden.findById(wardenId).select('-password');
+    const warden = await Warden.findOne(filter).select('-password');
     if (!warden) {
       return res.status(404).send({ message: "Warden profile not found" });
+    }
+    if (String(warden._id) !== String(req.user?.userId)) {
+      return res.status(403).send({ message: "You can only access your own profile" });
     }
 
     res.status(200).send({
@@ -185,8 +245,20 @@ wardenApp.delete(
   verifyJWT,
   expressAsyncHandler(async (req, res) => {
     const wardenId = req.params.wardenId;
+    const filter = wardenLookupFilter(wardenId);
+    if (!filter) {
+      return res.status(400).send({ message: "Invalid warden id" });
+    }
 
-    const deletedProfile = await Warden.findByIdAndDelete(wardenId);
+    const existing = await Warden.findOne(filter).select('_id');
+    if (!existing) {
+      return res.status(404).send({ message: "Profile not found for deletion" });
+    }
+    if (String(existing._id) !== String(req.user?.userId)) {
+      return res.status(403).send({ message: "You can only delete your own profile" });
+    }
+
+    const deletedProfile = await Warden.findOneAndDelete(filter);
 
     if (!deletedProfile) {
       return res.status(404).send({ message: "Profile not found for deletion" });
@@ -204,11 +276,29 @@ wardenApp.get(
   "/complaints/all",
   verifyJWT,
   expressAsyncHandler(async (req, res) => {
-    const complaints = await Complaint.find().sort({ createdAt: -1 });
+    const complaints = await Complaint.find().sort({ createdAt: -1 }).lean();
+
+    const payload = await Promise.all(complaints.map(enrichComplaintWithStudent));
 
     res.status(200).send({
       message: "All complaints fetched successfully",
-      payload: complaints
+      payload
+    });
+  })
+);
+
+wardenApp.get(
+  "/students/list",
+  verifyJWT,
+  expressAsyncHandler(async (req, res) => {
+    const students = await Hosteller.find()
+      .select('_id Id firstName lastName email block roomNumber')
+      .sort({ firstName: 1, lastName: 1 })
+      .lean();
+
+    res.status(200).send({
+      message: "Students fetched successfully",
+      payload: students
     });
   })
 );
@@ -254,9 +344,11 @@ wardenApp.put(
       return res.status(404).send({ message: "Complaint not found" });
     }
 
+    const payload = await enrichComplaintWithStudent(updatedComplaint);
+
     res.status(200).send({
       message: "Complaint updated successfully",
-      payload: updatedComplaint
+      payload
     });
   })
 );
@@ -290,47 +382,11 @@ wardenApp.put(
       remarks: wardenComments
     });
 
+    const payload = await enrichComplaintWithStudent(complaint);
+
     res.status(200).send({
       message: 'Complaint verification updated',
-      payload: complaint
-    });
-  })
-);
-
-// FIXED: Send notification endpoint
-wardenApp.post(
-  '/notify', 
-  verifyJWT,
-  expressAsyncHandler(async (req, res) => {
-    const { 
-      senderId, 
-      senderName, 
-      senderRole, 
-      recipientId, 
-      recipientEmail, 
-      title, 
-      message, 
-      type, 
-      priority, 
-      relatedComplaintId 
-    } = req.body;
-
-    // Basic validation
-    if (!title || !message) {
-      return res.status(400).send({ message: 'Title and message are required' });
-    }
-
-    // Create notification
-    const notification = await Notification.create({
-      title,
-      description: message,
-      receiverId: recipientId || null,
-      complaintId: relatedComplaintId || null
-    });
-
-    res.status(200).send({ 
-      message: 'Notification sent successfully', 
-      payload: notification 
+      payload
     });
   })
 );
@@ -384,4 +440,132 @@ wardenApp.get(
   })
 );
 
+// GET notifications for a warden
+wardenApp.get('/notifications/:userId', verifyJWT, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (String(req.user?.userId) !== String(userId)) {
+      return res.status(403).json({ message: 'You can only access your own notifications' });
+    }
+
+    const notifications = await Notification.find({ 
+      recipientId: userId 
+    }).sort({ createdAt: -1 });
+    
+    res.status(200).json({
+      message: 'Notifications retrieved successfully',
+      payload: notifications
+    });
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// PUT - Mark notification as read
+wardenApp.put('/notifications/:notificationId/mark-read', verifyJWT, async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+    const existing = await Notification.findById(notificationId);
+    if (!existing) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+    if (String(existing.recipientId) !== String(req.user?.userId)) {
+      return res.status(403).json({ message: 'Not allowed to modify this notification' });
+    }
+
+    const notification = await Notification.findByIdAndUpdate(
+      notificationId,
+      { isRead: true },
+      { new: true }
+    );
+    
+    res.status(200).json({
+      message: 'Notification marked as read',
+      payload: notification
+    });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// DELETE notification
+wardenApp.delete('/notifications/:notificationId', verifyJWT, async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+    const existing = await Notification.findById(notificationId);
+    if (!existing) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+    if (String(existing.recipientId) !== String(req.user?.userId)) {
+      return res.status(403).json({ message: 'Not allowed to delete this notification' });
+    }
+
+    const notification = await Notification.findByIdAndDelete(notificationId);
+    
+    res.status(200).json({
+      message: 'Notification deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// FIXED: Send notification endpoint
+wardenApp.post(
+  '/notify', 
+  verifyJWT,
+  expressAsyncHandler(async (req, res) => {
+    const {
+      senderName,
+      senderRole,
+      recipientId,
+      recipientEmail,
+      title,
+      message,
+      type,
+      priority
+    } = req.body;
+
+    const jwtUserId = req.user?.userId;
+    if (!jwtUserId) {
+      return res.status(401).send({ message: 'Unauthorized' });
+    }
+
+    console.log('Notification request received:', req.body);
+
+    // Basic validation
+    if (!title || !message || !recipientId) {
+      return res.status(400).send({ message: 'Title, message, and recipientId are required' });
+    }
+
+    const recipient = await resolveNotificationRecipient(recipientId, recipientEmail);
+    if (!recipient) {
+      return res.status(404).send({ message: 'Recipient student not found' });
+    }
+
+    // senderId must be MongoDB ObjectId — use JWT (client may send employee code e.g. WR001)
+    const notification = await Notification.create({
+      senderId: jwtUserId,
+      senderName: senderName || 'Warden',
+      senderRole: senderRole || req.user?.role || 'warden',
+      recipientId: recipient._id,
+      recipientEmail: recipient.email,
+      title,
+      message,
+      type: type || 'general',
+      priority: priority || 'normal',
+      isRead: false
+    });
+
+    console.log('Notification created:', notification);
+
+    res.status(200).send({ 
+      message: 'Notification sent successfully', 
+      payload: notification 
+    });
+  })
+);
 module.exports = wardenApp;

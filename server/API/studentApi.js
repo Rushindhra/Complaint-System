@@ -7,6 +7,7 @@ const HostellerModel=require('../models/hosteller/hostellerModel');
 const ComplaintModel=require('../models/complaintModel');
 const ComplaintStatusModel=require('../models/hosteller/complaintStatusModel');
 const verifyToken=require('../middleware/verifytoken')
+const Notification = require('../models/warden/notificationModel')
 
 studentApp.use(exp.json());
 
@@ -27,7 +28,7 @@ studentApp.get("/complaints/:studentId",verifyToken,expressAsyncHandler(async(re
 //   await ComplaintStatusModel.create({
 //     complaintId: newComplaint._id,
 //     updatedBy: complaintData.createdBy, // Assuming student
-//     status: 'Not Done Yet'
+//     status: 'Not Started'
 //   });
 
 //   res.status(201).send({ message: "Complaint registered successfully", payload: newComplaint });
@@ -85,7 +86,7 @@ studentApp.post(
     await ComplaintStatusModel.create({
       complaintId: complaint._id,
       updatedBy:   rollno,
-      status:      'Not Done Yet'
+      status:      'Not Started'
     });
 
     res.status(201).send({ message: "Complaint registered", payload: complaint });
@@ -348,5 +349,78 @@ studentApp.post(
   })
 );
 
+// GET notifications for a student
+studentApp.get('/notifications/:userId', verifyToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (String(req.user?.userId) !== String(userId)) {
+      return res.status(403).json({ message: 'You can only access your own notifications' });
+    }
+
+    // Find notifications where recipientId matches the userId
+    const notifications = await Notification.find({ 
+      recipientId: userId 
+    }).sort({ createdAt: -1 }); // Sort by newest first
+    
+    res.status(200).json({
+      message: 'Notifications retrieved successfully',
+      payload: notifications
+    });
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// PUT - Mark notification as read
+studentApp.put('/notifications/:notificationId/mark-read', verifyToken, async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+    const existing = await Notification.findById(notificationId);
+    if (!existing) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+    if (String(existing.recipientId) !== String(req.user?.userId)) {
+      return res.status(403).json({ message: 'Not allowed to modify this notification' });
+    }
+
+    const notification = await Notification.findByIdAndUpdate(
+      notificationId,
+      { isRead: true },
+      { new: true }
+    );
+    
+    res.status(200).json({
+      message: 'Notification marked as read',
+      payload: notification
+    });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// DELETE notification
+studentApp.delete('/notifications/:notificationId', verifyToken, async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+    const existing = await Notification.findById(notificationId);
+    if (!existing) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+    if (String(existing.recipientId) !== String(req.user?.userId)) {
+      return res.status(403).json({ message: 'Not allowed to delete this notification' });
+    }
+
+    const notification = await Notification.findByIdAndDelete(notificationId);
+    
+    res.status(200).json({
+      message: 'Notification deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 module.exports = studentApp;
