@@ -195,12 +195,6 @@ function Footer() {
                   support@complaintsystem.com
                 </a>
               </div>
-              <div className="d-flex align-items-start">
-                <i className="fas fa-phone text-primary me-3 mt-1"></i>
-                <a href="tel:+919876543210" className="text-muted text-decoration-none">
-                  +91 98765 43210
-                </a>
-              </div>
             </div>
           </div>
           
