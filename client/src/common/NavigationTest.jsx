@@ -199,53 +199,6 @@ function NavigationTest() {
     });
   };
 
-  // Simulate login for testing
-  const simulateLogin = (userType) => {
-    const testUsers = {
-      student: {
-        Id: 'TEST_STUDENT_123',
-        firstName: 'Test',
-        lastName: 'Student',
-        email: 'teststudent@example.com',
-        role: 'student'
-      },
-      warden: {
-        Id: 'TEST_WARDEN_456',
-        firstName: 'Test',
-        lastName: 'Warden',
-        email: 'testwarden@example.com',
-        role: 'warden'
-      }
-    };
-
-    const testToken = 'test_token_' + Date.now();
-    const user = testUsers[userType];
-
-    if (login(user, testToken)) {
-      addTestResult(`Simulate ${userType} Login`, 'SUCCESS', `UserId: ${user.Id}`);
-      
-      // Test navigation
-      setTimeout(() => {
-        const targetPath = userType === 'student' 
-          ? `/student-profile/${user.Id}` 
-          : `/warden-profile/${user.Id}`;
-        
-        addTestResult('Navigation Attempt', 'INITIATED', `Target: ${targetPath}`);
-        navigate(targetPath);
-      }, 1000);
-    } else {
-      addTestResult(`Simulate ${userType} Login`, 'FAILED', 'Login function returned false');
-    }
-  };
-
-  // Clear all tests
-  const clearTests = () => {
-    setTestResults([]);
-    logout();
-    localStorage.clear();
-    addTestResult('Reset', 'COMPLETED', 'All data cleared');
-  };
-
   useEffect(() => {
     // Run initial tests
     testLocalStorage();

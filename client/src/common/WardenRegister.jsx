@@ -17,7 +17,8 @@ function WardenRegister() {
     setMessage('');
 
     try {
-      const { confirmPassword, ...registrationData } = data;
+      const registrationData = { ...data };
+      delete registrationData.confirmPassword;
 
       const response = await fetch(`${API_BASE_URL}/warden-api/register`, {
         method: 'POST',

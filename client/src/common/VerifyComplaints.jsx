@@ -6,7 +6,7 @@ import { API_BASE_URL } from '../config/api';
 function VerifyComplaints() {
   const { wardenId } = useParams();
   const navigate = useNavigate();
-  const { currentUser, isWarden, addNotification } = useUser();
+  const { currentUser, isWarden } = useUser();
   
   // State management
   const [complaints, setComplaints] = useState([]);

@@ -21,7 +21,6 @@ function Warden() {
   
   // State management
   const [wardenData, setWardenData] = useState(null);
-  const [allComplaints, setAllComplaints] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -166,7 +165,6 @@ function Warden() {
       const result = await response.json();
 
       if (response.ok) {
-        setAllComplaints(result.payload || []);
         calculateStatistics(result.payload || []);
         updateCharts(result.payload || []);
       } else {

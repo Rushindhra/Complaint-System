@@ -41,7 +41,6 @@ function WardenProfile() {
   
   // State management
   const [wardenData, setWardenData] = useState(null);
-  const [allComplaints, setAllComplaints] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -194,7 +193,6 @@ function WardenProfile() {
 
       if (response.ok) {
         const complaintsData = result.payload || [];
-        setAllComplaints(complaintsData);
         calculateStatistics(complaintsData);
         
         // Delay chart update to ensure DOM is ready
@@ -207,7 +205,6 @@ function WardenProfile() {
         console.error('Failed to fetch complaints:', result.message);
         setError('Failed to fetch complaints data');
         // Set empty data to prevent crashes
-        setAllComplaints([]);
         calculateStatistics([]);
         updateCharts([]);
       }
@@ -215,7 +212,6 @@ function WardenProfile() {
       console.error('Error fetching complaints:', error);
       setError('Network error while fetching complaints');
       // Set empty data to prevent crashes
-      setAllComplaints([]);
       calculateStatistics([]);
       updateCharts([]);
     }
